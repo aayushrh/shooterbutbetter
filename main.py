@@ -53,13 +53,13 @@ def shoot(shooter_coordinates, dir, dir_y, rotation, player, speed):
 def spawn(player):
     if len(char_group) < 15:
         random_num = random.randint(1, 100)
-        if random_num < chance_rocket:
+        if random_num <= chance_rocket:
             t = idkanymore.Enemy(idkanymore.enemy_type_rocket, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
-        if chance_rocket < random_num and random_num < chance_spiral:
+        if chance_rocket <= random_num and random_num <= chance_spiral + chance_rocket:
             t = idkanymore.Enemy(idkanymore.enemy_type_spiral, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
-        if chance_spiral < random_num and random_num < chance_shotgun:
+        if chance_spiral + chance_rocket <= random_num and random_num <= chance_shotgun + chance_spiral + chance_rocket:
             t = idkanymore.Enemy(idkanymore.enemy_type_shotgun, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
-        if chance_shotgun < random_num and random_num <= 100:
+        if chance_shotgun + chance_spiral + chance_rocket <= random_num and random_num <= 100:
             t = idkanymore.Enemy(idkanymore.enemy_type_regular, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
         char_group.add(t)
 
