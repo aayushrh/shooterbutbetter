@@ -18,9 +18,15 @@ chance_spiral = 0
 chance_shotgun = 0
 chance_rocket = 0
 
+chance_spawn = 250
+
 hp = 1
 
 score = 0
+
+lvl_time = 1000
+
+bullet_groupt = pygame.sprite.Group()
 
 
 class Bullet(pygame.sprite.Sprite):
@@ -52,18 +58,20 @@ def shoot(shooter_coordinates, dir, dir_y, rotation, player, speed):
 
 def spawn(player):
     if len(char_group) < 15:
-        random_num = random.randint(1, 100)
+        random_num = random.randint(1, 200)
         if random_num <= chance_rocket:
             t = idkanymore.Enemy(idkanymore.enemy_type_rocket, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
-        if chance_rocket <= random_num and random_num <= chance_spiral + chance_rocket:
+        elif chance_rocket <= random_num and random_num <= chance_spiral + chance_rocket:
             t = idkanymore.Enemy(idkanymore.enemy_type_spiral, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
-        if chance_spiral + chance_rocket <= random_num and random_num <= chance_shotgun + chance_spiral + chance_rocket:
+        elif chance_spiral + chance_rocket <= random_num and random_num <= chance_shotgun + chance_spiral + chance_rocket:
             t = idkanymore.Enemy(idkanymore.enemy_type_shotgun, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
-        if chance_shotgun + chance_spiral + chance_rocket <= random_num and random_num <= 100:
+        elif chance_shotgun + chance_spiral + chance_rocket <= random_num and random_num <= 100:
             t = idkanymore.Enemy(idkanymore.enemy_type_regular, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
+        elif random_num >= 100s:
+            t = idkanymore.Enemy(idkanymore.enemy_type_spiral, (random.randrange(height // 5, width * 4 // 5), 0), player, 1, "G")
         char_group.add(t)
 
-class Player:
+class Player:s
     def __init__(self, gamemode):
         self.image = pygame.image.load("images/character.png")
         self.rect = pygame.Rect(width/2, height/2, 40, 40)
@@ -149,6 +157,14 @@ def main():
     global chance_spiral
     global chance_rocket
     global hp
+    global chance_spawn
+    global lvl_time
+
+    chance_normal = 100
+    chance_rocket = chance_shotgun = chance_spiral = 0
+    hp = 1
+    chance_spawn = 250
+    lvl_time = 1000
 
     pygame.init()
     pygame.font.init()
@@ -229,16 +245,18 @@ def main():
                         right_click = False
             screen.fill(WHITE)
 
-            if level_counter == 1000:
+            if level_counter == lvl_time:
                 chance_normal -= 6
                 chance_shotgun += 3
                 chance_shotgun += 2
                 chance_rocket += 1
                 level_counter = 0
                 level += 1
+                chance_spawn -= 20
                 hp += 1
+                lvl_time += 100
 
-            if (random.randint(1, 250) == 1):
+            if (random.randint(1, chance_spawn) == 1):
                 spawn(player)
 
             player.update(left_click, right_click, screen)
@@ -253,7 +271,10 @@ def main():
                     c.hp -= 1
                     if c.hp == 0:
                         char_group.remove(c)
-                        score += 1
+                        if c.t == "R":
+                            score += 1
+                        else:
+                            score -= 10
                     else:
                         c.alive = True
             screen.blit(player.image, player.rect)
