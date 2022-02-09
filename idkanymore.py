@@ -79,11 +79,11 @@ enemy_attack_regular = Enemy_Attack(enemy_bullet_regular, 3, 5, 15, 0, 0, True, 
 enemy_type_regular = Enemy_Type(0.1, WIN_W/25, WIN_H/24, enemy_attack_regular, "snipe" + str(WIN_H//4) + ";100_")
 
 enemy_bullet_slow = Enemy_Bullet_Type(5, 5, 5, False, 0, 0, 0)
-enemy_attack_shotgun = Enemy_Attack(enemy_bullet_slow, 8, 10, 60, 30, 30, True, "shotgun2_", 1)
+enemy_attack_shotgun = Enemy_Attack(enemy_bullet_slow, 8, 10, 15, 30, 30, True, "shotgun2_", 1)
 enemy_type_shotgun = Enemy_Type(0.25, WIN_W/25, WIN_H/24, enemy_attack_shotgun, "diveplayer200_")
 
-enemy_attack_spiral = Enemy_Attack(enemy_bullet_slow, 30, 60, 420, 24, 0, False, "spiral", 1)
-enemy_type_spiral = Enemy_Type(0.3, WIN_W/25, WIN_H/30, enemy_attack_spiral, "bomb" + str(WIN_H//5) + ";100_")
+enemy_attack_spiral = Enemy_Attack(enemy_bullet_regular, 30, 60, 20, 24, 0, False, "spiral", 1)
+enemy_type_spiral = Enemy_Type(0.3, WIN_W/25, WIN_H/24, enemy_attack_spiral, "bomb" + str(WIN_H//4) + ";100_")
 
 enemy_bullet_rocket = Enemy_Bullet_Type(0.3, 5, 5, "8;5_", 1, "150;60_", 5)
 enemy_attack_rocket = Enemy_Attack(enemy_bullet_rocket, 15, 60, 30, 90, 30, True, "sides2_", 2)
