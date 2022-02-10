@@ -32,14 +32,18 @@ class Civilians(pygame.sprite.Sprite):
         self.size = 40
         self.tick_turn = 1
         self.rotation = 1
+        self.dir = 1
     def update(self):
         global score
-        self.tick_turn -= 1
+        if self.tick_turn > 0:
+            self.tick_turn -= 1
         if self.tick_turn == 0:
             self.rotation = random.randint(1, 4)
+            if random.randint(1, 3) == 1:
+                self.dir = -1
             self.tick_turn = 200
-        self.rect.x += math.cos(self.rotation * (180/math.pi)/60)
-        self.rect.y += math.sin(self.rotation * (180 /math.pi)/60)
+        self.rect.x += self.dir * math.cos(self.rotation * (180/math.pi))
+        self.rect.y += self.dir * math.sin(self.rotation * (180 /math.pi))
         e_bullets_list = pygame.sprite.spritecollide(self, bullet_group, True)
         for e in e_bullets_list:
             civil_group.remove(self)
@@ -96,7 +100,7 @@ class Player:
         self.dir = 1
         self.dir_y = 1
         self.cooldown_counter = 0
-        self.cooldown = 10
+        self.cooldown = 20
         self.health = 5
         self.healthcounter = 0
         self.dead = False
@@ -187,6 +191,9 @@ def main():
     chance_normal = 100
     chance_shotgun = chance_spiral = chance_rocket = 0
     hp = 1
+
+    for k in civil_group:
+        civil_group.remove(k)
 
     font = pygame.font.Font("fonts/fourside.ttf", 75)
     title = font.render("-- Shooter --", 1, BLACK)
@@ -333,7 +340,7 @@ def main():
                             if 180 < mouse_pos[1] < 260:
                                 if score >= 5:
                                     score -= 5
-                                    player.speed += 10
+                                    player.speed += 4
                             elif 318 < mouse_pos[1] < 400:
                                 if score >= 1 and player.cooldown > 1:
                                     score -= 1
