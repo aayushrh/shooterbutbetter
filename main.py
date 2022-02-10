@@ -10,7 +10,7 @@ GREEN = (0, 255, 0)
 GREY = (127, 127, 127)
 
 bullet_group = pygame.sprite.Group()
-char_group = pygame.sprite.Group()
+enemy_group = pygame.sprite.Group()
 enemy_bullet_group = pygame.sprite.Group()
 
 chance_normal = 100
@@ -18,15 +18,32 @@ chance_spiral = 0
 chance_shotgun = 0
 chance_rocket = 0
 
-chance_spawn = 250
-
 hp = 1
 
 score = 0
 
-lvl_time = 1000
+civil_group = pygame.sprite.Group()
 
-bullet_groupt = pygame.sprite.Group()
+class Civilians(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self.image = pygame.image.load('images/civilian.png')
+        self.rect = pygame.Rect(x, y, 40, 40)
+        self.size = 40
+        self.tick_turn = 1
+        self.rotation = 1
+    def update(self):
+        global score
+        self.tick_turn -= 1
+        if self.tick_turn == 0:
+            self.rotation = random.randint(1, 4)
+            self.tick_turn = 200
+        self.rect.x += math.cos(self.rotation * (180/math.pi)/60)
+        self.rect.y += math.sin(self.rotation * (180 /math.pi)/60)
+        for l in bullet_group:
+            if abs(l.rect.centerx - self.rect.centerx) < self.size * 2 and abs(l.rect.centery - self.rect.centery) < self.size * 2:
+                civil_group.remove(self)
+                score -= 10
 
 
 class Bullet(pygame.sprite.Sprite):
@@ -57,21 +74,19 @@ def shoot(shooter_coordinates, dir, dir_y, rotation, player, speed):
 
 
 def spawn(player):
-    if len(char_group) < 15:
-        random_num = random.randint(1, 200)
+    if len(enemy_group) < 15:
+        random_num = random.randint(1, 100)
         if random_num <= chance_rocket:
             t = idkanymore.Enemy(idkanymore.enemy_type_rocket, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
-        elif chance_rocket <= random_num and random_num <= chance_spiral + chance_rocket:
+        if chance_rocket <= random_num and random_num <= chance_spiral + chance_rocket:
             t = idkanymore.Enemy(idkanymore.enemy_type_spiral, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
-        elif chance_spiral + chance_rocket <= random_num and random_num <= chance_shotgun + chance_spiral + chance_rocket:
+        if chance_spiral + chance_rocket <= random_num and random_num <= chance_shotgun + chance_spiral + chance_rocket:
             t = idkanymore.Enemy(idkanymore.enemy_type_shotgun, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
-        elif chance_shotgun + chance_spiral + chance_rocket <= random_num and random_num <= 100:
+        if chance_shotgun + chance_spiral + chance_rocket <= random_num and random_num <= 100:
             t = idkanymore.Enemy(idkanymore.enemy_type_regular, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
-        elif random_num >= 100s:
-            t = idkanymore.Enemy(idkanymore.enemy_type_spiral, (random.randrange(height // 5, width * 4 // 5), 0), player, 1, "G")
-        char_group.add(t)
+        enemy_group.add(t)
 
-class Player:s
+class Player:
     def __init__(self, gamemode):
         self.image = pygame.image.load("images/character.png")
         self.rect = pygame.Rect(width/2, height/2, 40, 40)
@@ -157,14 +172,6 @@ def main():
     global chance_spiral
     global chance_rocket
     global hp
-    global chance_spawn
-    global lvl_time
-
-    chance_normal = 100
-    chance_rocket = chance_shotgun = chance_spiral = 0
-    hp = 1
-    chance_spawn = 250
-    lvl_time = 1000
 
     pygame.init()
     pygame.font.init()
@@ -177,6 +184,9 @@ def main():
 
     level = 1
     level_counter = 0
+    chance_normal = 100
+    chance_shotgun = chance_spiral = chance_rocket = 0
+    hp = 1
 
     font = pygame.font.Font("fonts/fourside.ttf", 75)
     title = font.render("-- Shooter --", 1, BLACK)
@@ -215,8 +225,10 @@ def main():
     menu = False
     play = True
     score = 0
-    for t in char_group:
-        char_group.remove(t)
+    spawn_rate = 150
+    lvl_time = 1000
+    for t in enemy_group:
+        enemy_group.remove(t)
 
     for r in bullet_group:
         bullet_group.remove(r)
@@ -252,34 +264,37 @@ def main():
                 chance_rocket += 1
                 level_counter = 0
                 level += 1
-                chance_spawn -= 20
                 hp += 1
+                spawn_rate -= 10
                 lvl_time += 100
 
-            if (random.randint(1, chance_spawn) == 1):
+            if (random.randint(1, spawn_rate) == 1):
                 spawn(player)
 
             player.update(left_click, right_click, screen)
             bullet_group.update()
+            civil_group.update()
             enemy_bullet_group.update(player)
-            char_group.update(enemy_bullet_group, player, screen, bullet_group)
+            enemy_group.update(enemy_bullet_group, player, screen, bullet_group)
 
-            for c in char_group:
+            if random.randint(1, 500) == 1:
+                new_civilian = Civilians(random.randint(0, width), random.randint(0, height))
+                civil_group.add(new_civilian)
+
+            for c in enemy_group:
                 if c.alive:
                     screen.blit(c.image, c.rect)
                 else:
                     c.hp -= 1
                     if c.hp == 0:
-                        char_group.remove(c)
-                        if c.t == "R":
-                            score += 1
-                        else:
-                            score -= 10
+                        enemy_group.remove(c)
+                        score += 1
                     else:
                         c.alive = True
             screen.blit(player.image, player.rect)
             enemy_bullet_group.draw(screen)
             bullet_group.draw(screen)
+            civil_group.draw(screen)
 
             if player.dead:
                 main()
