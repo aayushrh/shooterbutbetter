@@ -40,10 +40,10 @@ class Civilians(pygame.sprite.Sprite):
             self.tick_turn = 200
         self.rect.x += math.cos(self.rotation * (180/math.pi)/60)
         self.rect.y += math.sin(self.rotation * (180 /math.pi)/60)
-        for l in bullet_group:
-            if abs(l.rect.centerx - self.rect.centerx) < self.size * 2 and abs(l.rect.centery - self.rect.centery) < self.size * 2:
-                civil_group.remove(self)
-                score -= 10
+        e_bullets_list = pygame.sprite.spritecollide(self, bullet_group, True)
+        for e in e_bullets_list:
+            civil_group.remove(self)
+            score -= 10
 
 
 class Bullet(pygame.sprite.Sprite):
