@@ -1,4 +1,4 @@
-import pygame, sys, random, math, idkanymore
+import pygame, sys, random, math, idkanymore, websockets, asyncio, json
 
 width = 970
 height = 620
@@ -23,6 +23,8 @@ hp = 1
 score = 0
 
 civil_group = pygame.sprite.Group()
+
+
 
 class Civilians(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -81,13 +83,13 @@ def spawn(player):
     if len(enemy_group) < 15:
         random_num = random.randint(1, 100)
         if random_num <= chance_rocket:
-            t = idkanymore.Enemy(idkanymore.enemy_type_rocket, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
+            t = idkanymore.Enemy(idkanymore.enemy_type_rocket, (random.randrange(0, width), random.randrange(0, height)), player, hp)
         if chance_rocket <= random_num and random_num <= chance_spiral + chance_rocket:
-            t = idkanymore.Enemy(idkanymore.enemy_type_spiral, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
+            t = idkanymore.Enemy(idkanymore.enemy_type_spiral, (random.randrange(0, width), random.randrange(0, height)), player, hp)
         if chance_spiral + chance_rocket <= random_num and random_num <= chance_shotgun + chance_spiral + chance_rocket:
-            t = idkanymore.Enemy(idkanymore.enemy_type_shotgun, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
+            t = idkanymore.Enemy(idkanymore.enemy_type_shotgun, (random.randrange(0, width), random.randrange(0, height)), player, hp)
         if chance_shotgun + chance_spiral + chance_rocket <= random_num and random_num <= 100:
-            t = idkanymore.Enemy(idkanymore.enemy_type_regular, (random.randrange(height // 5, width * 4 // 5), 0), player, hp)
+            t = idkanymore.Enemy(idkanymore.enemy_type_regular, (random.randrange(0, width), random.randrange(0, height)), player, hp)
         enemy_group.add(t)
 
 class Player:
@@ -95,14 +97,14 @@ class Player:
         self.image = pygame.image.load("images/character.png")
         self.rect = pygame.Rect(width/2, height/2, 40, 40)
         self.size = 10
-        self.speed = 1
+        self.speed = 2
         self.rotation = 0
         self.dir = 1
         self.dir_y = 1
         self.cooldown_counter = 0
-        self.cooldown = 20
+        self.cooldown = 10
         self.health = 5
-        self.healthcounter = 0
+        self.healthcounter = 10
         self.dead = False
         self.bullet_speed = 10
         self.weapon = 0
@@ -112,6 +114,7 @@ class Player:
         self.gamemode = gamemode
 
     def update(self, left_clicked, right_clicked, screen):
+
         mouse_pos = pygame.mouse.get_pos()
         key = pygame.key.get_pressed()
         if key[pygame.K_l]:
@@ -157,7 +160,7 @@ class Player:
         for l in enemy_bullet_group:
             if abs(l.rect.centerx - self.rect.centerx) < self.size * 2 and abs(l.rect.centery - self.rect.centery) < self.size * 2 and self.healthcounter == 0:
                 self.health -= 1
-                self.healthcounter = 10
+                self.healthcounter = 50
 
         if self.primed_cooldown > 0:
             self.primed_cooldown -= 1
@@ -196,7 +199,7 @@ def main():
         civil_group.remove(k)
 
     font = pygame.font.Font("fonts/fourside.ttf", 75)
-    title = font.render("-- Shooter --", 1, BLACK)
+    title = font.render("-- Gunpoint --", 1, BLACK)
     titlepos = title.get_rect()
     titlepos.centerx = width/2
     titlepos.centery = height/4
@@ -271,7 +274,8 @@ def main():
                 chance_rocket += 1
                 level_counter = 0
                 level += 1
-                hp += 1
+                if level < 1:
+                    hp += 1
                 spawn_rate -= 10
                 lvl_time += 100
 
@@ -284,7 +288,7 @@ def main():
             enemy_bullet_group.update(player)
             enemy_group.update(enemy_bullet_group, player, screen, bullet_group)
 
-            if random.randint(1, 500) == 1:
+            if random.randint(1, 1000) == 1:
                 new_civilian = Civilians(random.randint(0, width), random.randint(0, height))
                 civil_group.add(new_civilian)
 
@@ -340,7 +344,7 @@ def main():
                             if 180 < mouse_pos[1] < 260:
                                 if score >= 5:
                                     score -= 5
-                                    player.speed += 4
+                                    player.speed += 2
                             elif 318 < mouse_pos[1] < 400:
                                 if score >= 1 and player.cooldown > 1:
                                     score -= 1
