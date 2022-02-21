@@ -13,6 +13,7 @@ BLUE = (0, 0, 255)
 
 fps = 60
 
+
 class Ship_Type(pygame.sprite.Sprite):
    def __init__(self, speed, width, height, firerate, bullet_type):
        pygame.sprite.Sprite.__init__(self)
@@ -180,10 +181,14 @@ class Bullet(pygame.sprite.Sprite):
            self.kill()
 
 class Enemy(pygame.sprite.Sprite):
-   def __init__(self, enemy_type, startpos, target, hp):
+   def __init__(self, enemy_type, startpos, target, hp, dog):
        pygame.sprite.Sprite.__init__(self)
        self.type = enemy_type
-       self.image = pygame.image.load("images/enemy.png")
+       font = pygame.font.Font("fonts/fourside.ttf", 70)
+       if not dog:
+           self.image = font.render("!", 1, BLACK)
+       else:
+           self.image = font.render("!", 1, RED)
        self.rect = self.image.get_rect()
        self.rect.x = startpos[0]
        self.rect.y = startpos[1]
@@ -223,155 +228,159 @@ class Enemy(pygame.sprite.Sprite):
        self.y = self.rect.y
        self.xvel = 0
        self.yvel = 0
+       self.cooldown = 30
 
 
    def update(self, enemy_bullet_group, target, screen, bullet_group):
-       e_bullets_list = pygame.sprite.spritecollide(self, bullet_group, True)
-       for e in e_bullets_list:
-           self.alive = False
-           return 1
-       if self.fireclock == 0:
-           if self.volley == 0:
-               self.volley = self.type.attack.volley
-               self.fireclock = self.type.attack.cooldown
-           else:
-               if self.type.attack.aim_shot == True and type(self.type.attack.aim_shot) != int or self.volley == self.type.attack.volley:
-                   self.direction = math.atan2(self.rect.centery - target.rect.centery, target.rect.centerx - self.rect.centerx)
-               if self.volley == self.type.attack.volley:
-                   self.fireclock = 60 // self.type.attack.firerate
-               if self.type.attack.aim_shot >= 1:
-                   player_direction = math.atan2(self.rect.centery - target.rect.centery, target.rect.centerx - self.rect.centerx)
-                   if self.direction + math.radians(self.type.attack.aim_shot)/60 > player_direction and self.direction - math.radians(self.type.attack.aim_shot)/60 < player_direction:
-                       self.direction = player_direction
-                   else:
-                       if self.direction >= 0:
-                           if player_direction > self.direction or player_direction < self.direction - math.pi:
-                               self.direction += math.radians(self.type.attack.aim_shot)/60
-                           else:
-                               self.direction -= math.radians(self.type.attack.aim_shot)/60
-                       else:
-                           if player_direction > self.direction and player_direction < self.direction + math.pi:
-                               self.direction += math.radians(self.type.attack.aim_shot)/60
-                           else:
-                               self.direction -= math.radians(self.type.attack.aim_shot)/60
-               self.volley -= 1
-               if self.type.attack.type != "laser":
-                   for a in range(self.type.attack.shots):
+       if self.cooldown == 0:
+           self.image = pygame.image.load('images/enemy.png')
+           e_bullets_list = pygame.sprite.spritecollide(self, bullet_group, True)
+           for e in e_bullets_list:
+               self.alive = False
+               return 1
+           if self.fireclock == 0:
+               if self.volley == 0:
+                   self.volley = self.type.attack.volley
+                   self.fireclock = self.type.attack.cooldown
+               else:
+                   if self.type.attack.aim_shot == True and type(self.type.attack.aim_shot) != int or self.volley == self.type.attack.volley:
+                       self.direction = math.atan2(self.rect.centery - target.rect.centery, target.rect.centerx - self.rect.centerx)
+                   if self.volley == self.type.attack.volley:
                        self.fireclock = 60 // self.type.attack.firerate
-                       if "shotgun" in self.type.attack.type:
-                           for a in range(int(self.type.attack.type[7:-1])):
-                               e = Enemy_Bullet(self, self.type.attack.bullet, self.direction + math.radians(-self.type.attack.spread/2 + self.type.attack.spread * a/(int(self.type.attack.type[7:-1])-1)) + math.radians(random.randrange(-self.type.attack.random_spread, self.type.attack.random_spread + 1)))
-                               enemy_bullet_group.add(e)
-                       elif "sides" in self.type.attack.type:
-                           if int(self.type.attack.type[5:-1]) % 2 == 0:
-                               for a in range(int(self.type.attack.type[5:-1])//2):
-                                   e = Enemy_Bullet(self, self.type.attack.bullet, self.direction - math.radians(self.type.attack.spread*(a + 1)) + math.radians(random.randrange(-self.type.attack.random_spread, self.type.attack.random_spread + 1)))
+                   if self.type.attack.aim_shot >= 1:
+                       player_direction = math.atan2(self.rect.centery - target.rect.centery, target.rect.centerx - self.rect.centerx)
+                       if self.direction + math.radians(self.type.attack.aim_shot)/60 > player_direction and self.direction - math.radians(self.type.attack.aim_shot)/60 < player_direction:
+                           self.direction = player_direction
+                       else:
+                           if self.direction >= 0:
+                               if player_direction > self.direction or player_direction < self.direction - math.pi:
+                                   self.direction += math.radians(self.type.attack.aim_shot)/60
+                               else:
+                                   self.direction -= math.radians(self.type.attack.aim_shot)/60
+                           else:
+                               if player_direction > self.direction and player_direction < self.direction + math.pi:
+                                   self.direction += math.radians(self.type.attack.aim_shot)/60
+                               else:
+                                   self.direction -= math.radians(self.type.attack.aim_shot)/60
+                   self.volley -= 1
+                   if self.type.attack.type != "laser":
+                       for a in range(self.type.attack.shots):
+                           self.fireclock = 60 // self.type.attack.firerate
+                           if "shotgun" in self.type.attack.type:
+                               for a in range(int(self.type.attack.type[7:-1])):
+                                   e = Enemy_Bullet(self, self.type.attack.bullet, self.direction + math.radians(-self.type.attack.spread/2 + self.type.attack.spread * a/(int(self.type.attack.type[7:-1])-1)) + math.radians(random.randrange(-self.type.attack.random_spread, self.type.attack.random_spread + 1)))
                                    enemy_bullet_group.add(e)
-                                   e = Enemy_Bullet(self, self.type.attack.bullet, self.direction + math.radians(self.type.attack.spread*(a + 1)) + math.radians(random.randrange(-self.type.attack.random_spread, self.type.attack.random_spread + 1)))
+                           elif "sides" in self.type.attack.type:
+                               if int(self.type.attack.type[5:-1]) % 2 == 0:
+                                   for a in range(int(self.type.attack.type[5:-1])//2):
+                                       e = Enemy_Bullet(self, self.type.attack.bullet, self.direction - math.radians(self.type.attack.spread*(a + 1)) + math.radians(random.randrange(-self.type.attack.random_spread, self.type.attack.random_spread + 1)))
+                                       enemy_bullet_group.add(e)
+                                       e = Enemy_Bullet(self, self.type.attack.bullet, self.direction + math.radians(self.type.attack.spread*(a + 1)) + math.radians(random.randrange(-self.type.attack.random_spread, self.type.attack.random_spread + 1)))
+                                       enemy_bullet_group.add(e)
+                               else:
+                                   e = Enemy_Bullet(self, self.type.attack.bullet, self.direction + math.radians(random.randrange(-self.type.attack.random_spread, self.type.attack.random_spread + 1)))
                                    enemy_bullet_group.add(e)
+                                   for a in range(int(self.type.attack.type[5:-1])//2 - 1):
+                                       e = Enemy_Bullet(self, self.type.attack.bullet, self.direction - math.radians(self.type.attack.spread*(a + 1)) + math.radians(random.randrange(-self.type.attack.random_spread, self.type.attack.random_spread + 1)))
+                                       enemy_bullet_group.add(e)
+                                       e = Enemy_Bullet(self, self.type.attack.bullet, self.direction + math.radians(self.type.attack.spread*(a + 1)) + math.radians(random.randrange(-self.type.attack.random_spread, self.type.attack.random_spread + 1)))
+                                       enemy_bullet_group.add(e)
+
                            else:
                                e = Enemy_Bullet(self, self.type.attack.bullet, self.direction + math.radians(random.randrange(-self.type.attack.random_spread, self.type.attack.random_spread + 1)))
                                enemy_bullet_group.add(e)
-                               for a in range(int(self.type.attack.type[5:-1])//2 - 1):
-                                   e = Enemy_Bullet(self, self.type.attack.bullet, self.direction - math.radians(self.type.attack.spread*(a + 1)) + math.radians(random.randrange(-self.type.attack.random_spread, self.type.attack.random_spread + 1)))
-                                   enemy_bullet_group.add(e)
-                                   e = Enemy_Bullet(self, self.type.attack.bullet, self.direction + math.radians(self.type.attack.spread*(a + 1)) + math.radians(random.randrange(-self.type.attack.random_spread, self.type.attack.random_spread + 1)))
-                                   enemy_bullet_group.add(e)
-
+                           if self.type.attack.type == "spiral":
+                               self.direction += math.radians(self.type.attack.spread)
+                   elif self.fireclock == 0:
+                       pygame.draw.line(screen, RED, (self.rect.center), (self.rect.centerx + math.cos(self.direction)*1000, self.rect.centery - math.sin(self.direction)*1000), self.type.attack.spread)
+                       if self.direction - math.pi > player_direction:
+                           angle_diff = math.fabs(self.direction - (player_direction + 2*math.pi))
+                       elif player_direction - math.pi > self.direction:
+                           angle_diff = math.fabs(player_direction - (self.direction + 2*math.pi))
                        else:
-                           e = Enemy_Bullet(self, self.type.attack.bullet, self.direction + math.radians(random.randrange(-self.type.attack.random_spread, self.type.attack.random_spread + 1)))
-                           enemy_bullet_group.add(e)
-                       if self.type.attack.type == "spiral":
-                           self.direction += math.radians(self.type.attack.spread)
-               elif self.fireclock == 0:
-                   pygame.draw.line(screen, RED, (self.rect.center), (self.rect.centerx + math.cos(self.direction)*1000, self.rect.centery - math.sin(self.direction)*1000), self.type.attack.spread)
-                   if self.direction - math.pi > player_direction:
-                       angle_diff = math.fabs(self.direction - (player_direction + 2*math.pi))
-                   elif player_direction - math.pi > self.direction:
-                       angle_diff = math.fabs(player_direction - (self.direction + 2*math.pi))
+                           angle_diff = math.fabs(self.direction - player_direction)
+                       x = target.rect.width
+                       y = target.rect.height
+                       if math.sin(math.fabs(angle_diff)) * math.hypot(self.rect.centerx - target.rect.centerx, self.rect.centery - target.rect.centery) < self.type.attack.spread/2 + (x + y)/(4*(math.cos(angle_diff) + math.tan(angle_diff)*math.sin(angle_diff))):
+                           target.image.fill(BLUE)
+                       else:
+                           target.image.fill(GREEN)
+
+           else:
+               if self.fireclock <= 1:
+                   self.fireclock = 0
+               else:
+                   self.fireclock -= 1
+
+           if math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y) > self.type.speed * 20:
+
+               if (self.rect.right < 0 or self.rect.left > WIN_W) and (self.rect.top > WIN_H or self.rect.bottom < 0):
+                   self.kill()
+
+               if math.fabs(self.rect.x - self.targetx) > self.type.speed*100:
+                   self.xvel += self.type.speed * (self.targetx - self.rect.x)/math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y)
+
+               elif math.fabs(self.xvel) > math.fabs(self.type.speed*10):
+                   if self.xvel < 0:
+                       self.xvel += self.type.speed
                    else:
-                       angle_diff = math.fabs(self.direction - player_direction)
-                   x = target.rect.width
-                   y = target.rect.height
-                   if math.sin(math.fabs(angle_diff)) * math.hypot(self.rect.centerx - target.rect.centerx, self.rect.centery - target.rect.centery) < self.type.attack.spread/2 + (x + y)/(4*(math.cos(angle_diff) + math.tan(angle_diff)*math.sin(angle_diff))):
-                       target.image.fill(BLUE)
+                       self.xvel -= self.type.speed
+
+               else:
+                   self.xvel += self.type.speed * ((self.targetx - self.rect.x)/math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y)) / 3
+
+               if math.fabs(self.rect.y - self.targety) > self.type.speed*100:
+                   self.yvel -= self.type.speed * (self.targety - self.rect.y)/math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y)
+
+               elif math.fabs(self.yvel) > math.fabs(self.type.speed*10):
+                   if self.yvel < 0:
+                       self.yvel += self.type.speed
                    else:
-                       target.image.fill(GREEN)
+                       self.yvel -= self.type.speed
 
-       else:
-           if self.fireclock <= 1:
-               self.fireclock = 0
-           else:
-               self.fireclock -= 1
-
-       if math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y) > self.type.speed * 20:
-
-           if (self.rect.right < 0 or self.rect.left > WIN_W) and (self.rect.top > WIN_H or self.rect.bottom < 0):
-               self.kill()
-
-           if math.fabs(self.rect.x - self.targetx) > self.type.speed*100:
-               self.xvel += self.type.speed * (self.targetx - self.rect.x)/math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y)
-
-           elif math.fabs(self.xvel) > math.fabs(self.type.speed*10):
-               if self.xvel < 0:
-                   self.xvel += self.type.speed
                else:
-                   self.xvel -= self.type.speed
-
+                   self.yvel -= self.type.speed * ((self.targety - self.rect.y)/math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y)) / 3
            else:
-               self.xvel += self.type.speed * ((self.targetx - self.rect.x)/math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y)) / 3
+               if "strafe" in self.type.behavior:
+                   while math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y) > self.strafe_radius or math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y) < self.strafe_radius/2 or self.targetx < self.type.speed*100 or self.targetx > WIN_W - self.type.speed*100 or self.targety < self.type.speed*100 or self.targety > WIN_H - self.type.speed*100:
+                       self.targetx = random.randrange(self.rect.x - self.strafe_radius,self.rect.x + self.strafe_radius + 1)
+                       self.targety = random.randrange(self.rect.y - self.strafe_radius,self.rect.y + self.strafe_radius + 1)
+               elif "snipe" in self.type.behavior:
+                   while math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y) > self.strafe_radius or math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y) < self.strafe_radius/2 or self.targetx < self.type.speed*100 or self.targetx > WIN_W - self.type.speed*100 or self.targety < self.type.speed*100 or self.targety > WIN_H - self.type.speed*100 or self.targety < self.basey - self.strafe_radius or self.targety > self.basey + self.strafe_radius:
+                       self.targetx = random.randrange(self.rect.x - self.strafe_radius,self.rect.x + self.strafe_radius + 1)
+                       self.targety = random.randrange(self.rect.y - self.strafe_radius,self.rect.y + self.strafe_radius + 1)
+               elif "bomb" in self.type.behavior:
+                   if self.fireclock < 120:
+                       while math.hypot(self.targetx - target.rect.x, self.targety - (target.rect.y - self.strafe_radius/2)) > self.strafe_radius * 2 or math.hypot(self.targetx - target.rect.x, self.targety - (target.rect.y - self.strafe_radius/2)) < self.strafe_radius or self.targetx < self.type.speed * 100 or self.targetx > WIN_W - self.type.speed * 100 or self.targety < self.type.speed * 100 or self.targety > WIN_H - self.type.speed * 100:
+                           self.targetx = random.randrange(target.rect.x - self.strafe_radius, target.rect.x + self.strafe_radius + 1)
+                           self.targety = random.randrange((target.rect.y - self.strafe_radius/2) - self.strafe_radius, (target.rect.y - self.strafe_radius/2) + self.strafe_radius + 1)
+                   elif self.rect.y > self.basey - self.strafe_radius*2:
+                       while math.hypot(self.targetx - self.rect.x, self.targety - self.basey) > self.strafe_radius or math.hypot(self.targetx - self.rect.x, self.targety - self.basey) < self.strafe_radius / 2 or self.targetx < self.type.speed * 100 or self.targetx > WIN_W - self.type.speed * 100 or self.targety < self.type.speed * 100 or self.targety > WIN_H - self.type.speed * 100:
+                           self.targetx = random.randrange(self.rect.x - self.strafe_radius, self.rect.x + self.strafe_radius + 1)
+                           self.targety = random.randrange(self.basey - self.strafe_radius, self.basey + self.strafe_radius + 1)
+                   else:
+                       while math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y) > self.strafe_radius or math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y) < self.strafe_radius / 2 or self.targetx < self.type.speed * 100 or self.targetx > WIN_W - self.type.speed * 100 or self.targety < self.type.speed * 100 or self.targety > WIN_H - self.type.speed * 100:
+                           self.targetx = random.randrange(self.rect.x - self.strafe_radius, self.rect.x + self.strafe_radius + 1)
+                           self.targety = random.randrange(self.rect.y - self.strafe_radius, self.rect.y + self.strafe_radius + 1)
 
-           if math.fabs(self.rect.y - self.targety) > self.type.speed*100:
-               self.yvel -= self.type.speed * (self.targety - self.rect.y)/math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y)
-
-           elif math.fabs(self.yvel) > math.fabs(self.type.speed*10):
-               if self.yvel < 0:
-                   self.yvel += self.type.speed
-               else:
-                   self.yvel -= self.type.speed
-
+           if math.fabs(math.hypot(self.xvel, self.yvel)) > self.type.speed * 20:
+               self.xvel *= self.type.speed*20/math.fabs(math.hypot(self.xvel, self.yvel))
+               self.yvel *= self.type.speed*20/math.fabs(math.hypot(self.xvel, self.yvel))
+           self.x += self.xvel
+           self.y -= self.yvel
+           self.rect.x = self.x
+           self.rect.y = self.y
+           if math.fabs(self.xvel) < 0.01:
+               self.xvel = 0
            else:
-               self.yvel -= self.type.speed * ((self.targety - self.rect.y)/math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y)) / 3
+               self.xvel *= 0.98
+           if math.fabs(self.yvel) < 0.01:
+               self.yvel = 0
+           else:
+               self.yvel *= 0.98
+           return 0
        else:
-           if "strafe" in self.type.behavior:
-               while math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y) > self.strafe_radius or math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y) < self.strafe_radius/2 or self.targetx < self.type.speed*100 or self.targetx > WIN_W - self.type.speed*100 or self.targety < self.type.speed*100 or self.targety > WIN_H - self.type.speed*100:
-                   self.targetx = random.randrange(self.rect.x - self.strafe_radius,self.rect.x + self.strafe_radius + 1)
-                   self.targety = random.randrange(self.rect.y - self.strafe_radius,self.rect.y + self.strafe_radius + 1)
-           elif "snipe" in self.type.behavior:
-               while math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y) > self.strafe_radius or math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y) < self.strafe_radius/2 or self.targetx < self.type.speed*100 or self.targetx > WIN_W - self.type.speed*100 or self.targety < self.type.speed*100 or self.targety > WIN_H - self.type.speed*100 or self.targety < self.basey - self.strafe_radius or self.targety > self.basey + self.strafe_radius:
-                   self.targetx = random.randrange(self.rect.x - self.strafe_radius,self.rect.x + self.strafe_radius + 1)
-                   self.targety = random.randrange(self.rect.y - self.strafe_radius,self.rect.y + self.strafe_radius + 1)
-           elif "bomb" in self.type.behavior:
-               if self.fireclock < 120:
-                   while math.hypot(self.targetx - target.rect.x, self.targety - (target.rect.y - self.strafe_radius/2)) > self.strafe_radius * 2 or math.hypot(self.targetx - target.rect.x, self.targety - (target.rect.y - self.strafe_radius/2)) < self.strafe_radius or self.targetx < self.type.speed * 100 or self.targetx > WIN_W - self.type.speed * 100 or self.targety < self.type.speed * 100 or self.targety > WIN_H - self.type.speed * 100:
-                       self.targetx = random.randrange(target.rect.x - self.strafe_radius, target.rect.x + self.strafe_radius + 1)
-                       self.targety = random.randrange((target.rect.y - self.strafe_radius/2) - self.strafe_radius, (target.rect.y - self.strafe_radius/2) + self.strafe_radius + 1)
-               elif self.rect.y > self.basey - self.strafe_radius*2:
-                   while math.hypot(self.targetx - self.rect.x, self.targety - self.basey) > self.strafe_radius or math.hypot(self.targetx - self.rect.x, self.targety - self.basey) < self.strafe_radius / 2 or self.targetx < self.type.speed * 100 or self.targetx > WIN_W - self.type.speed * 100 or self.targety < self.type.speed * 100 or self.targety > WIN_H - self.type.speed * 100:
-                       self.targetx = random.randrange(self.rect.x - self.strafe_radius, self.rect.x + self.strafe_radius + 1)
-                       self.targety = random.randrange(self.basey - self.strafe_radius, self.basey + self.strafe_radius + 1)
-               else:
-                   while math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y) > self.strafe_radius or math.hypot(self.targetx - self.rect.x, self.targety - self.rect.y) < self.strafe_radius / 2 or self.targetx < self.type.speed * 100 or self.targetx > WIN_W - self.type.speed * 100 or self.targety < self.type.speed * 100 or self.targety > WIN_H - self.type.speed * 100:
-                       self.targetx = random.randrange(self.rect.x - self.strafe_radius, self.rect.x + self.strafe_radius + 1)
-                       self.targety = random.randrange(self.rect.y - self.strafe_radius, self.rect.y + self.strafe_radius + 1)
-
-       if math.fabs(math.hypot(self.xvel, self.yvel)) > self.type.speed * 20:
-           self.xvel *= self.type.speed*20/math.fabs(math.hypot(self.xvel, self.yvel))
-           self.yvel *= self.type.speed*20/math.fabs(math.hypot(self.xvel, self.yvel))
-       self.x += self.xvel
-       self.y -= self.yvel
-       self.rect.x = self.x
-       self.rect.y = self.y
-       if math.fabs(self.xvel) < 0.01:
-           self.xvel = 0
-       else:
-           self.xvel *= 0.98
-       if math.fabs(self.yvel) < 0.01:
-           self.yvel = 0
-       else:
-           self.yvel *= 0.98
-
-       return 0
+           self.cooldown -= 1
 
 
 class Enemy_Bullet(pygame.sprite.Sprite):
@@ -402,6 +411,7 @@ class Enemy_Bullet(pygame.sprite.Sprite):
            self.fuse = self.type.delay
        else:
            self.fuse = int(self.type.delay[0:self.type.delay.find(";")]) + random.randrange(-int(self.type.delay[self.type.delay.find(";") + 1:-1]), int(self.type.delay[self.type.delay.find(";") + 1:-1]) + 1)
+
 
    def update(self, target):
        if self.fuse == 0:
