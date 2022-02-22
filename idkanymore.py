@@ -186,7 +186,7 @@ class Enemy(pygame.sprite.Sprite):
        self.type = enemy_type
        font = pygame.font.Font("fonts/fourside.ttf", 70)
        if not dog:
-           self.image = font.render("!", 1, BLACK)
+           self.image = font.render("!", 1, WHITE)
        else:
            self.image = font.render("!", 1, RED)
        self.rect = self.image.get_rect()
