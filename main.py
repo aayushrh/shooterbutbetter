@@ -27,6 +27,8 @@ civil_group = pygame.sprite.Group()
 dog = False
 cat = False
 
+highscore = 0
+
 class Civilians(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
@@ -190,6 +192,7 @@ def main():
     global hp
     global cat
     global dog
+    global highscore
 
     dogb = False
     catb = False
@@ -226,9 +229,16 @@ def main():
     clickpos.centerx = width/2
     clickpos.centery = height/2
 
+    font2 = pygame.font.Font("fonts/fourside.ttf", 35)
+    click1 = font2.render(("-- High : " + str(highscore) + " --"), 1, WHITE)
+    clickpos1 = click1.get_rect()
+    clickpos1.centerx = width/2
+    clickpos1.centery = height/2 + height / 4
+
     while not break_var:
         screen.fill(BLACK)
         screen.blit(title, titlepos)
+        screen.blit(click1, clickpos1)
         if i > 10:
             if i > 20:
                 i = 0
@@ -263,7 +273,6 @@ def main():
         enemy_bullet_group.remove(s)
     r = 0
     r_count = 30
-    score = 7
     while True:
         if play:
             level_counter += 1
@@ -350,6 +359,8 @@ def main():
             civil_group.draw(screen)
 
             if player.dead:
+                if level > highscore:
+                    highscore = level
                 main()
 
             for i in range(player.health):
