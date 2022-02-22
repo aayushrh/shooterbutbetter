@@ -129,7 +129,7 @@ class Player:
         mouse_pos = pygame.mouse.get_pos()
         key = pygame.key.get_pressed()
         if key[pygame.K_l]:
-            self.health = 100000
+            self.dead = True
         if self.rect.centerx - mouse_pos[0] != 0:
             self.rotation = math.atan(abs(self.rect.centery - mouse_pos[1])/abs(self.rect.centerx - mouse_pos[0]))
         else:
@@ -196,6 +196,8 @@ def main():
 
     dogb = False
     catb = False
+
+    cat = dog =False
 
     catc = 300
 
@@ -312,6 +314,7 @@ def main():
                         fir = True
                         if e.hp <= 0:
                             enemy_group.remove(e)
+                            score += 1
                         catc = 300
             if dog:
                 screen.blit(pygame.image.load("images/dog.png"), (pygame.Rect(player.rect.centerx - 15 + math.sin(r) * 80, player.rect.centery - 15 + math.cos(r) * 80, 80, 60 ,)))
@@ -379,6 +382,7 @@ def main():
 
             screen.blit(score_txt, scorepos)
             screen.blit(lvl_txt, lvlpos)
+            screen.blit(font2.render(str(round((level_counter/lvl_time)*100)) + '%', 1, WHITE), (10, 50))
         elif menu:
             screen.fill(WHITE)
             game_menu = pygame.image.load("images/menu_2.png")
