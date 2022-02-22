@@ -275,18 +275,18 @@ def main():
                         left_click = True
                     if event.button == 3:
                         right_click = True
-                    if event.button == 2:
-                        menu = True
-                        play = False
                 elif event.type == pygame.MOUSEBUTTONUP:
                     if event.button == 1:
                         left_click = False
                     if event.button == 3:
                         right_click = False
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_e:
+                    if event.key == pygame.K_q:
                         play = False
                         petm = True
+                    elif event.key == pygame.K_e:
+                        play = False
+                        menu = True
             screen.fill(BLACK)
             if (r_count == 0):
                 r = (r + 0.05) % 360
@@ -377,9 +377,6 @@ def main():
                 if event.type == pygame.QUIT:
                     sys.exit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 2:
-                        menu = False
-                        play = True
                     if event.button == 1:
                         mouse_pos = pygame.mouse.get_pos()
                         print(mouse_pos[0], mouse_pos[1])
@@ -396,6 +393,10 @@ def main():
                                 if score >= 2:
                                     score -= 2
                                     player.health += 1
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_e:
+                        play = True
+                        menu = False
         elif petm:
             screen.fill(WHITE)
             game_menu = pygame.image.load("images/pet_menu_2.png")
@@ -428,7 +429,7 @@ def main():
                         if (630 < mouse_pos[0] and mouse_pos[0] < 838 and 431 < mouse_pos[1] and mouse_pos[1] < 474):
                             pass
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_e:
+                    if event.key == pygame.K_q:
                         play = True
                         petm = False
 
