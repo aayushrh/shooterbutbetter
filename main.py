@@ -169,9 +169,11 @@ class Player:
 				self.cooldown_counter -= 1
 
 		for l in enemy_bullet_group:
-			if abs(l.rect.centerx - self.rect.centerx) < self.size * 2 and abs(l.rect.centery - self.rect.centery) < self.size * 2 and self.healthcounter <= 0:
-				self.health -= 1
-				self.healthcounter = 100
+			if abs(l.rect.centerx - self.rect.centerx) < self.size * 2 and abs(l.rect.centery - self.rect.centery) < self.size * 2:
+				l.kill()
+				if self.healthcounter <= 0:
+					self.health -= 1
+					self.healthcounter = 100
 
 		if self.primed_cooldown > 0:
 			self.primed_cooldown -= 1
