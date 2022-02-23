@@ -95,13 +95,13 @@ def spawn(player):
 	if len(enemy_group) < 15:
 		random_num = random.randint(1, 100)
 		if random_num <= chance_rocket:
-			t = idkanymore.Enemy(idkanymore.enemy_type_rocket, (random.randrange(height // 5, width * 4 // 5), 0), player, hp, dog)
+			t = idkanymore.Enemy(idkanymore.enemy_type_rocket, (random.randint(0, width), random.randint(0, height)), player, hp, dog)
 		if chance_rocket <= random_num and random_num <= chance_spiral + chance_rocket:
-			t = idkanymore.Enemy(idkanymore.enemy_type_spiral, (random.randrange(height // 5, width * 4 // 5), 0), player, hp, dog)
+			t = idkanymore.Enemy(idkanymore.enemy_type_spiral, (random.randint(0, width), random.randint(0, height)), player, hp, dog)
 		if chance_spiral + chance_rocket <= random_num and random_num <= chance_shotgun + chance_spiral + chance_rocket:
-			t = idkanymore.Enemy(idkanymore.enemy_type_shotgun, (random.randrange(height // 5, width * 4 // 5), 0), player, hp, dog)
+			t = idkanymore.Enemy(idkanymore.enemy_type_shotgun, (random.randint(0, width), random.randint(0, height)), player, hp, dog)
 		if chance_shotgun + chance_spiral + chance_rocket <= random_num and random_num <= 100:
-			t = idkanymore.Enemy(idkanymore.enemy_type_regular, (random.randrange(height // 5, width * 4 // 5), 0), player, hp, dog)
+			t = idkanymore.Enemy(idkanymore.enemy_type_regular, (random.randint(0, width), random.randint(0, height)), player, hp, dog)
 		enemy_group.add(t)
 
 class Player:
