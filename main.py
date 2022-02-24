@@ -59,7 +59,6 @@ class Civilians(pygame.sprite.Sprite):
             if self.rect.y > height:
                 civil_group.remove(self)
                 civil_saved += 1
-                print("hello")
             hit = pygame.sprite.spritecollide(self, bullet_group, True)
             for e in hit:
                 score -= 10
@@ -332,7 +331,6 @@ def main():
                 screen.blit(pygame.image.load("images/dog.png"), (pygame.Rect(player.rect.centerx - 15 + math.sin(r) * 80, player.rect.centery - 15 + math.cos(r) * 80, 80, 60 ,)))
             if cat:
                 screen.blit(pygame.image.load("images/cat.png"), (pygame.Rect(player.rect.centerx - 15 + math.sin(r) * 80, player.rect.centery - 15 + math.cos(r) * 80, 60, 60 ,)))
-            print(civil_saved, civil_needed)
             if level_counter >= lvl_time and civil_saved >= civil_needed:
                 chance_normal -= 6
                 chance_shotgun += 3
@@ -416,7 +414,6 @@ def main():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         mouse_pos = pygame.mouse.get_pos()
-                        print(mouse_pos[0], mouse_pos[1])
                         if 623 < mouse_pos[0] < 844:
                             if 420 < mouse_pos[1] < 465:
                                 if score >= 5:
