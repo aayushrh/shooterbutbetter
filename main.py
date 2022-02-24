@@ -43,10 +43,32 @@ class Civilians(pygame.sprite.Sprite):
 		self.rotation = 1
 		self.dir = 1
 		self.cooldown = 30
-	def update(self):
+		self.everytensecs = 0
+		self.wanttofollowpl = True
+		self.e = None
+		
+	def update(self, pl):
 		global score
+		self.everytensecs += 1
 		if self.cooldown == 0:
 			self.image = pygame.image.load('images/civilian.png')
+			
+			if self.everytensecs >= 60 * 2.5:
+				self.wanttofollowpl = random.randint(0, 1)
+				self.e = random.choice(enemy_group.sprites())
+				self.everytensecs = 0
+			
+			randmul = 1
+			if self.wanttofollowpl:
+				self.rect.x += 0.01 * -(self.rect.x - pl.rect.x) + random.randint(-randmul, randmul)
+				self.rect.y += 0.01 * -(self.rect.y - pl.rect.y) + random.randint(-randmul, randmul)
+			else:
+				try:
+					self.rect.x += 0.01 * -(self.rect.x - self.e.rect.x) + random.randint(-randmul, randmul)
+					self.rect.y += 0.01 * -(self.rect.y - self.e.rect.y) + random.randint(-randmul, randmul)
+				except: pass
+			
+			"""
 			if self.tick_turn > 0:
 				self.tick_turn -= 1
 			if self.tick_turn == 0:
@@ -55,7 +77,7 @@ class Civilians(pygame.sprite.Sprite):
 					self.dir = -1
 				self.tick_turn = 200
 			self.rect.x += self.dir * math.cos(self.rotation * (180/math.pi))
-			self.rect.y += self.dir * math.sin(self.rotation * (180 /math.pi))
+			self.rect.y += self.dir * math.sin(self.rotation * (180 /math.pi))"""
 			e_bullets_list = pygame.sprite.spritecollide(self, bullet_group, True)
 			for e in e_bullets_list:
 				civil_group.remove(self)
@@ -95,13 +117,13 @@ def spawn(player):
 	if len(enemy_group) < 15:
 		random_num = random.randint(1, 100)
 		if random_num <= chance_rocket:
-			t = idkanymore.Enemy(idkanymore.enemy_type_rocket, (random.randint(0, width), random.randint(0, height)), player, hp, dog)
+			t = idkanymore.Enemy(idkanymore.enemy_type_rocket, (random.randint(0, width - 10), random.randint(0, height - 10)), player, hp, dog)
 		if chance_rocket <= random_num and random_num <= chance_spiral + chance_rocket:
-			t = idkanymore.Enemy(idkanymore.enemy_type_spiral, (random.randint(0, width), random.randint(0, height)), player, hp, dog)
+			t = idkanymore.Enemy(idkanymore.enemy_type_spiral, (random.randint(0, width - 10), random.randint(0, height - 10)), player, hp, dog)
 		if chance_spiral + chance_rocket <= random_num and random_num <= chance_shotgun + chance_spiral + chance_rocket:
-			t = idkanymore.Enemy(idkanymore.enemy_type_shotgun, (random.randint(0, width), random.randint(0, height)), player, hp, dog)
+			t = idkanymore.Enemy(idkanymore.enemy_type_shotgun, (random.randint(0, width - 10), random.randint(0, height - 10)), player, hp, dog)
 		if chance_shotgun + chance_spiral + chance_rocket <= random_num and random_num <= 100:
-			t = idkanymore.Enemy(idkanymore.enemy_type_regular, (random.randint(0, width), random.randint(0, height)), player, hp, dog)
+			t = idkanymore.Enemy(idkanymore.enemy_type_regular, (random.randint(0, width - 10), random.randint(0, height - 10)), player, hp, dog)
 		enemy_group.add(t)
 
 class Player:
@@ -115,7 +137,7 @@ class Player:
 		self.dir_y = 1
 		self.cooldown_counter = 0
 		self.cooldown = 20
-		self.health = 5
+		self.health = 500
 		self.healthcounter = 0
 		self.dead = False
 		self.bullet_speed = 10
@@ -340,7 +362,7 @@ def main():
 
 			player.update(left_click, right_click, screen)
 			bullet_group.update()
-			civil_group.update()
+			civil_group.update(player)
 			enemy_bullet_group.update(player)
 			enemy_group.update(enemy_bullet_group, player, screen, bullet_group)
 
