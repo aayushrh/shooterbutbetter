@@ -55,7 +55,8 @@ class Civilians(pygame.sprite.Sprite):
 			
 			if self.everytensecs >= 60 * 2.5:
 				self.wanttofollowpl = random.randint(0, 1)
-				self.e = random.choice(enemy_group.sprites())
+				try: self.e = random.choice(enemy_group.sprites())
+				except IndexError: self.wanttofollowpl = True
 				self.everytensecs = 0
 			
 			randmul = 1
@@ -66,7 +67,7 @@ class Civilians(pygame.sprite.Sprite):
 				try:
 					self.rect.x += 0.01 * -(self.rect.x - self.e.rect.x) + random.randint(-randmul, randmul)
 					self.rect.y += 0.01 * -(self.rect.y - self.e.rect.y) + random.randint(-randmul, randmul)
-				except: pass
+				except: self.wanttofollowpl = True
 			
 			"""
 			if self.tick_turn > 0:
@@ -137,7 +138,7 @@ class Player:
 		self.dir_y = 1
 		self.cooldown_counter = 0
 		self.cooldown = 20
-		self.health = 500
+		self.health = 5
 		self.healthcounter = 0
 		self.dead = False
 		self.bullet_speed = 10
