@@ -1,4 +1,4 @@
-import pygame, sys, random, math, idkanymore
+import pygame, sys, random, math, idkanymore, scoresend
 
 width = 970
 height = 620
@@ -23,6 +23,12 @@ hp = 1
 score = 0
 
 civil_group = pygame.sprite.Group()
+
+g_NAME = ""
+while True:
+	g_NAME = input("Enter your name: ")
+	if g_NAME.isalpha():
+		break
 
 dog = False
 cat = False
@@ -376,8 +382,10 @@ def main():
             civil_group.draw(screen)
 
             if player.dead:
+                screen.fill(BLACK)
                 if level > highscore:
                     highscore = level
+                scoresend.send_score(g_NAME, level)
                 main()
 
             for i in range(player.health):
