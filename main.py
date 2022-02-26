@@ -135,8 +135,15 @@ class Player:
         self.bomb = None
         self.primed_cooldown = 0
         self.gamemode = gamemode
+        self.dashcool = -1000
+        self.dashlen = 10
+        self.dashspeed = 5
+        self.dashcooltime = 250
 
     def update(self, left_clicked, right_clicked, screen):
+        self.dashcool -= 1
+        if self.dashcool == 0:
+            self.speed /= self.dashspeed
         mouse_pos = pygame.mouse.get_pos()
         key = pygame.key.get_pressed()
         if key[pygame.K_l]:
@@ -171,6 +178,9 @@ class Player:
                 self.rect.x -= self.speed
             elif key[pygame.K_d] and self.rect.right < width:
                 self.rect.x += self.speed
+            if key[pygame.K_SPACE] and self.dashcool <= -self.dashcooltime:
+                self.speed *= self.dashspeed
+                self.dashcool = self.dashlen
         if self.weapon == 0:
             if left_clicked and self.cooldown_counter == 0:
                 shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True, self.bullet_speed)
@@ -222,7 +232,6 @@ def main():
     clock = pygame.time.Clock()
 
     civil_needed = 3
-    civil_saved = 0
 
     i = 0
     break_var = False
@@ -350,7 +359,7 @@ def main():
                 level += 1
                 if level % 4 == 0:
                     hp += 1
-                spawn_rate -= 10
+                spawn_rate += 10
                 lvl_time += 100
                 score += 3
                 if level % 2 == 0:
