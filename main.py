@@ -1,4 +1,4 @@
-import pygame, sys, random, math, idkanymore
+import pygame, sys, random, math, idkanymore, scoresend
 
 width = 970
 height = 620
@@ -23,6 +23,12 @@ hp = 1
 score = 0
 
 civil_group = pygame.sprite.Group()
+
+g_NAME = ""
+while True:
+    g_NAME = input("Enter your name: ").upper()
+    if g_NAME.isalpha() and len(g_NAME) == 3:
+        break
 
 dog = False
 cat = False
@@ -291,6 +297,10 @@ def main():
             level_counter += 1
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
+                    try:
+                        scoresend.send_score(g_NAME, level)
+                    except Exception as e:
+                        print(f"Your score is {level}. Please report that an error occured. The error is:\n{e}")
                     sys.exit()
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
@@ -378,6 +388,10 @@ def main():
             if player.dead:
                 if level > highscore:
                     highscore = level
+                try:
+                    scoresend.send_score(g_NAME, level)
+                except Exception as e:
+                    print(f"Your score is {level}. Please report that an error occured. The error is:\n{e}")
                 main()
 
             for i in range(player.health):
