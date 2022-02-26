@@ -52,13 +52,15 @@ class Civilians(pygame.sprite.Sprite):
         self.rotation = 1
         self.dir = 1
         self.cooldown = 30
+        self.speed = 1
+
     def update(self):
         global score
         global civil_saved
         if self.cooldown == 0:
             self.image = pygame.image.load('images/civilian.png')
             if self.tick <= 0:
-                self.rect.y += 1
+                self.rect.y += (1 * self.speed)
                 self.rect.x += (random.randint(-1, 1) if random.randint(5, 5) == 5 else 0)
                 self.tick = 3
             self.tick -= 1
@@ -73,7 +75,6 @@ class Civilians(pygame.sprite.Sprite):
 
         else:
             self.cooldown -= 1
-
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, coordinates, x_speed, y_speed, image):
@@ -393,7 +394,24 @@ def main():
             enemy_bullet_group.draw(screen)
             bullet_group.draw(screen)
             civil_group.draw(screen)
+            
+            if not len(enemy_group):
+                for c in civil_group:
+                    if (c.speed < 2 or (horse and c.speed <= 2)):
+                        c.speed *= 2
 
+            if len(enemy_group):
+                for c in civil_group:
+                    if (c.speed == 2 or (horse and c.speed == 4)):
+                        c.speed /= 2
+
+            if horse and len(civil_group):
+                fir = True
+                for c in civil_group:
+                    if fir and c.speed < 4:
+                        c.speed *= 2
+                        fir = False
+            
             if player.dead:
                 if level > highscore:
                     highscore = level
@@ -475,7 +493,7 @@ def main():
                                 dog = True
                                 score -= 7
                                 dogb = True
-                                cat = False
+                                cat = horse = False
                             elif not dog and dogb:
                                 dog = True
                                 cat = False
@@ -484,19 +502,19 @@ def main():
                                 cat = True
                                 score -= 7
                                 catb = True
-                                dog = False
+                                dog = horse = False
                             elif not cat and catb:
                                 cat = True
-                                dog = False
+                                dog = horse = False
                         if (630 < mouse_pos[0] and mouse_pos[0] < 838 and 431 < mouse_pos[1] and mouse_pos[1] < 474):
                             if(score >= 7 and not horse and horseb == False):
-                                cat = True
+                                horse = True
                                 score -= 7
-                                catb = True
-                                dog = False
+                                horseb = True
+                                dog = cat = False
                             elif not cat and catb:
-                                cat = True
-                                dog = False
+                                horse = True
+                                dog = cat = False
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_q:
                         play = True
