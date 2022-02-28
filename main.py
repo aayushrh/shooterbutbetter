@@ -233,6 +233,7 @@ def main():
     screen = pygame.display.set_mode((width, height))
     clock = pygame.time.Clock()
 
+    civil_saved = 0
     civil_needed = 3
 
     i = 0
