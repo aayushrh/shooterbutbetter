@@ -136,7 +136,7 @@ class Player:
         self.bomb = None
         self.primed_cooldown = 0
         self.gamemode = gamemode
-        self.dashcool = -1000
+        self.dashcool = -250
         self.dashlen = 10
         self.dashspeed = 5
         self.dashcooltime = 250
@@ -440,6 +440,7 @@ def main():
             screen.blit(lvl_txt, lvlpos)
             screen.blit(font2.render(str(min(100, round((level_counter/lvl_time)*100))) + '%', 1, WHITE), (10, 50))
             screen.blit(font2.render(str(civil_saved) + '/' + str(civil_needed), 1, WHITE), (10, 100))
+            screen.blit(font2.render(str(min(100, round(100*((-player.dashcool+player.dashlen)/player.dashcooltime)))) + '%', 1, WHITE), (10, 150))
         elif menu:
             screen.fill(WHITE)
             game_menu = pygame.image.load("images/menu_2.png")
