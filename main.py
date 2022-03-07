@@ -135,11 +135,13 @@ class Player:
         self.dashspeed = 5
         self.dashcooltime = 250
 
-    def update(self, left_clicked, right_clicked, screen):
+    def update(self, left_clicked, right_clicked, true_screen):
         self.dashcool -= 1
         if self.dashcool == 0:
             self.speed /= self.dashspeed
         mouse_pos = pygame.mouse.get_pos()
+        mouse_pos = (mouse_pos[0] / (true_screen.get_rect().size[0]/width), mouse_pos[1] / (true_screen.get_rect().size[1]/height))
+        print((true_screen.get_rect().size[0]/width))
         key = pygame.key.get_pressed()
         if key[pygame.K_l]:
             self.dead = True
@@ -200,6 +202,10 @@ class Player:
             self.dead = True
 
 
+true_screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
+screen = pygame.Surface((width, height))
+
+
 def main():
     global score
     global chance_normal
@@ -224,7 +230,6 @@ def main():
     pygame.init()
     pygame.font.init()
     pygame.mixer.init()
-    screen = pygame.display.set_mode((width, height))
     clock = pygame.time.Clock()
 
     civil_needed = 3
@@ -275,8 +280,8 @@ def main():
         pygame.display.flip()
         i += 1
         clock.tick(60)
+        true_screen.blit(pygame.transform.scale(screen, true_screen.get_rect().size), (0, 0))
 
-    screen = pygame.display.set_mode((width, height))
     player = Player(0)
     left_click = False
     right_click = False
@@ -354,14 +359,14 @@ def main():
                 spawn_rate += 10
                 lvl_time += 100
                 score += 3
+                civil_saved -= civil_needed
                 if level % 2 == 0:
                     civil_needed += 1
-                civil_saved = 0
 
             if (random.randint(1, spawn_rate) == 1):
                 spawn(player)
 
-            player.update(left_click, right_click, screen)
+            player.update(left_click, right_click, true_screen)
             bullet_group.update()
             civil_group.update()
             enemy_bullet_group.update(player)
@@ -442,6 +447,7 @@ def main():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         mouse_pos = pygame.mouse.get_pos()
+                        mouse_pos = (mouse_pos[0] / (true_screen.get_rect().size[0]/width), mouse_pos[1] / (true_screen.get_rect().size[1]/height))
                         if 623 < mouse_pos[0] < 844:
                             if 420 < mouse_pos[1] < 465:
                                 if score >= 5:
@@ -475,6 +481,7 @@ def main():
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         mouse_pos = pygame.mouse.get_pos()
+                        mouse_pos = (mouse_pos[0] / (true_screen.get_rect().size[0]/width), mouse_pos[1] / (true_screen.get_rect().size[1]/height))
                         if (630 < mouse_pos[0] and mouse_pos[0] < 838 and 202 < mouse_pos[1] and mouse_pos[1] < 244):
                             if(score >= 7 and not dog and dogb == False):
                                 dog = True
@@ -507,6 +514,7 @@ def main():
                         play = True
                         petm = False
 
+        true_screen.blit(pygame.transform.scale(screen, true_screen.get_rect().size), (0, 0))
         pygame.display.flip()
         clock.tick(60)
 
