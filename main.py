@@ -372,7 +372,8 @@ def main():
                 level += 1
                 if level % 4 == 0:
                     hp += 1
-                spawn_rate += 10
+                if not spawn_rate - 10 <= 0:
+                    spawn_rate -= 10
                 lvl_time += 100
                 score += 3
                 civil_saved -= civil_needed
