@@ -237,6 +237,8 @@ def main():
 
     cat = dog = horse = False
 
+    civil_saved = 0
+
     catc = 300
 
     pygame.init()
