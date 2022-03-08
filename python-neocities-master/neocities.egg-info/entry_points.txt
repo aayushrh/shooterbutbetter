@@ -1,3 +1,0 @@
-[console_scripts]
-neocities = neocities.neocli:main
-      
