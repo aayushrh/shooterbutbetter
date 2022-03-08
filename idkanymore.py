@@ -1,7 +1,7 @@
 import pygame, os, sys, math, random
 
-WIN_W = 970
-WIN_H = 620
+WIN_W = 1280
+WIN_H = 720
 
 WHITE = (255, 255, 255)
 LIGHT_GREY = (150, 150, 150)
