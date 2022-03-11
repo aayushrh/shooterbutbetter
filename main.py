@@ -140,7 +140,7 @@ class Player:
         self.bomb = None
         self.primed_cooldown = 0
         self.gamemode = gamemode
-        self.dashcool = -1000
+        self.dashcool = -250
         self.dashlen = 10
         self.dashspeed = 5
         self.dashcooltime = 250
@@ -203,6 +203,7 @@ class Player:
                 self.health -= 1
                 l.kill()
                 self.healthcounter = 100
+                l.kill()
 
         if self.primed_cooldown > 0:
             self.primed_cooldown -= 1
@@ -246,6 +247,7 @@ def main():
     pygame.mixer.init()
     clock = pygame.time.Clock()
 
+    civil_saved = 0
     civil_needed = 3
 
     i = 0
@@ -450,6 +452,7 @@ def main():
             screen.blit(lvl_txt, lvlpos)
             screen.blit(font2.render(str(min(100, round((level_counter / lvl_time) * 100))) + '%', 1, WHITE), (10, 50))
             screen.blit(font2.render(str(civil_saved) + '/' + str(civil_needed), 1, WHITE), (10, 100))
+            screen.blit(font2.render(str(min(100, round(100*((-player.dashcool+player.dashlen)/player.dashcooltime)))) + '%', 1, WHITE), (10, 150))
         elif menu:
             screen.fill(BLACK)
             game_menu = pygame.image.load("images/menu_2.png")
