@@ -32,7 +32,6 @@ highscore = 0
 civil_saved = 0
 civil_needed = 3
 
-
 class Civilians(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
@@ -47,7 +46,7 @@ class Civilians(pygame.sprite.Sprite):
         self.rotation = 1
         self.dir = 1
         self.cooldown = 30
-        self.speed = 1
+        self.speed = 2
 
     def update(self):
         global score
@@ -64,7 +63,7 @@ class Civilians(pygame.sprite.Sprite):
                 civil_saved += 1
             hit = pygame.sprite.spritecollide(self, bullet_group, True)
             for e in hit:
-                score -= 10
+                score -= 5
                 self.kill()
 
 
@@ -112,7 +111,7 @@ def spawn(player):
             t = idkanymore.Enemy(idkanymore.enemy_type_spiral, (random.randrange(height // 5, width * 4 // 5), 0),
                                  player, hp, dog)
         if chance_spiral + chance_rocket <= random_num and random_num <= chance_shotgun + chance_spiral + chance_rocket:
-            t = idkanymore.Enemy(idkanymore.enemy_type_shotgun, (random.randrange(height // 5, width * 4 // 5), 0),
+            t = idkanymore.Enemy(idkanymore.enemy_type_spiral, (random.randrange(height // 5, width * 4 // 5), 0),
                                  player, hp, dog)
         if chance_shotgun + chance_spiral + chance_rocket <= random_num and random_num <= 100:
             t = idkanymore.Enemy(idkanymore.enemy_type_regular, (random.randrange(height // 5, width * 4 // 5), 0),
@@ -140,7 +139,7 @@ class Player:
         self.bomb = None
         self.primed_cooldown = 0
         self.gamemode = gamemode
-        self.dashcool = -250
+        self.dashcool = -1000
         self.dashlen = 10
         self.dashspeed = 5
         self.dashcooltime = 250
@@ -149,6 +148,7 @@ class Player:
         self.dashcool -= 1
         if self.dashcool == 0:
             self.speed /= self.dashspeed
+            pass
         mouse_pos = pygame.mouse.get_pos()
         mouse_pos = (mouse_pos[0] / (true_screen.get_rect().size[0] / width),
                      mouse_pos[1] / (true_screen.get_rect().size[1] / height))
@@ -193,6 +193,14 @@ class Player:
                 shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
                       self.bullet_speed)
                 self.cooldown_counter = self.cooldown
+            if right_clicked and self.cooldown_counter == 0:
+                shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
+                      self.bullet_speed)
+                shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation - 0.25, True,
+                      self.bullet_speed)
+                shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + 0.25, True,
+                      self.bullet_speed)
+                self.cooldown_counter = self.cooldown * 2
 
             if self.cooldown_counter > 0:
                 self.cooldown_counter -= 1
@@ -203,7 +211,6 @@ class Player:
                 self.health -= 1
                 l.kill()
                 self.healthcounter = 100
-                l.kill()
 
         if self.primed_cooldown > 0:
             self.primed_cooldown -= 1
@@ -247,7 +254,6 @@ def main():
     pygame.mixer.init()
     clock = pygame.time.Clock()
 
-    civil_saved = 0
     civil_needed = 3
 
     i = 0
@@ -335,10 +341,7 @@ def main():
                     if event.button == 3:
                         right_click = False
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
-                        play = False
-                        petm = True
-                    elif event.key == pygame.K_e:
+                    if event.key == pygame.K_e:
                         play = False
                         menu = True
             screen.fill(BLACK)
@@ -452,7 +455,6 @@ def main():
             screen.blit(lvl_txt, lvlpos)
             screen.blit(font2.render(str(min(100, round((level_counter / lvl_time) * 100))) + '%', 1, WHITE), (10, 50))
             screen.blit(font2.render(str(civil_saved) + '/' + str(civil_needed), 1, WHITE), (10, 100))
-            screen.blit(font2.render(str(min(100, round(100*((-player.dashcool+player.dashlen)/player.dashcooltime)))) + '%', 1, WHITE), (10, 150))
         elif menu:
             screen.fill(BLACK)
             game_menu = pygame.image.load("images/menu_2.png")
@@ -485,6 +487,9 @@ def main():
                                     score -= 2
                                     player.health += 1
                 if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_RIGHT:
+                        petm = True
+                        menu = False
                     if event.key == pygame.K_e:
                         play = True
                         menu = False
@@ -535,7 +540,10 @@ def main():
                                 horse = True
                                 dog = cat = False
                 elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_q:
+                    if event.key == pygame.K_LEFT:
+                        petm = False
+                        menu = True
+                    if event.key == pygame.K_e:
                         play = True
                         petm = False
 
