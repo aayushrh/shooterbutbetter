@@ -32,6 +32,27 @@ highscore = 0
 civil_saved = 0
 civil_needed = 3
 
+class Boomerang(pygame.sprite.Sprite):
+    def __init__(self, x, y, x_speed, y_speed, player):
+        super().__init__()
+        self.image = pygame.Surface((40, 40))
+        self.image.fill(WHITE)
+        self.rect = pygame.Rect((x, y), self.image.get_size())
+        self.size = 20
+        self.x_speed = x_speed
+        self.y_speed = y_speed
+        self.hit = False
+        self.player = player
+    def update(self):
+        if self.hit:
+            self.rect.centerx += math.cos(math.atan(abs(self.rect.centery - self.player.rect.centery) / abs(self.rect.centerx - self.player.rect.centery))) * 20
+            self.rect.centery += math.sin(math.atan(abs(self.rect.centery - self.player.rect.centery) / abs(self.rect.centerx - self.player.rect.centery))) * 20
+        else:
+            self.rect.centerx += self.x_speed
+            self.rect.centery += self.y_speed
+
+
+
 class Civilians(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
@@ -88,6 +109,10 @@ class Bullet(pygame.sprite.Sprite):
         self.lifetime -= 1
         if self.lifetime == 0:
             bullet_group.remove(self)
+
+def shootboom(player):
+    new_boom = Boomerang(player.rect.centerx, player.rect.centery, player.dir * math.cos(player.rotation) * 2, player.dir_y * math.sin(player.rotation) * 2, player)
+    bullet_group.add(new_boom)
 
 
 def shoot(shooter_coordinates, dir, dir_y, rotation, player, speed):
@@ -190,8 +215,9 @@ class Player:
                 self.dashcool = self.dashlen
         if self.weapon == 0:
             if left_clicked and self.cooldown_counter == 0:
-                shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
-                      self.bullet_speed)
+                #shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
+                      #self.bullet_speed)
+                shootboom(self)
                 self.cooldown_counter = self.cooldown
             if right_clicked and self.cooldown_counter == 0:
                 shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
