@@ -35,7 +35,7 @@ civil_needed = 3
 class Boomerang(pygame.sprite.Sprite):
     def __init__(self, x, y, x_speed, y_speed, player):
         super().__init__()
-        self.image = pygame.Surface((40, 40))
+        self.image = pygame.Surface((20, 20))
         self.image.fill(WHITE)
         self.rect = pygame.Rect((x, y), self.image.get_size())
         self.size = 20
@@ -43,10 +43,43 @@ class Boomerang(pygame.sprite.Sprite):
         self.y_speed = y_speed
         self.hit = False
         self.player = player
+        self.target = player
     def update(self):
         if self.hit:
-            self.rect.centerx += math.cos(math.atan(abs(self.rect.centery - self.player.rect.centery) / abs(self.rect.centerx - self.player.rect.centery))) * 20
-            self.rect.centery += math.sin(math.atan(abs(self.rect.centery - self.player.rect.centery) / abs(self.rect.centerx - self.player.rect.centery))) * 20
+            for e in enemy_group:
+                if math.sqrt((self.rect.centerx - e.rect.centerx) ** 2 + (self.rect.centery - e.rect.centery) ** 2) <= 300:
+                    self.target = e
+                    break
+                else:
+                    self.target = self.player
+            if self.rect.centerx <= self.target.rect.centerx and self.rect.centery < self.target.rect.centery:
+                dir = 1
+                dir_y = 1
+            elif self.rect.centerx <= self.target.rect.centerx and self.rect.centery >= self.target.rect.centery:
+                dir_y = -1
+                dir = 1
+            elif self.rect.centerx > self.target.rect.centerx and self.rect.centery >= self.target.rect.centery:
+                dir_y = -1
+                dir = -1
+            elif self.rect.centerx > self.target.rect.centerx and self.rect.centery < self.target.rect.centery:
+                dir = -1
+                dir_y = 1
+            if not self.rect.centerx - self.target.rect.centerx == 0 and not self.rect.centery - self.target.rect.centery == 0:
+                self.rect.centerx += dir * math.cos(math.atan(abs(self.rect.centery - self.target.rect.centery) / abs(self.rect.centerx - self.target.rect.centery))) * 20
+                self.rect.centery += dir_y * math.sin(math.atan(abs(self.rect.centery - self.target.rect.centery) / abs(self.rect.centerx - self.target.rect.centery))) * 20
+            else:
+                self.target = self.player
+            if math.sqrt((self.rect.centerx - self.target.rect.centerx) ** 2 + (self.rect.centery - self.target.rect.centery) ** 2) <= 10:
+                if not self.target == self.player:
+                    for e in enemy_group:
+                        if math.sqrt((self.rect.centerx - e.rect.centerx) ** 2 + (
+                                self.rect.centery - e.rect.centery) ** 2) <= 300:
+                            self.target = e
+                            break
+                        else:
+                            self.target = self.player
+                else:
+                    self.kill()
         else:
             self.rect.centerx += self.x_speed
             self.rect.centery += self.y_speed
@@ -84,8 +117,12 @@ class Civilians(pygame.sprite.Sprite):
                 civil_saved += 1
             hit = pygame.sprite.spritecollide(self, bullet_group, True)
             for e in hit:
-                score -= 5
-                self.kill()
+                if(type(e) == type(Bullet)):
+                    score -= 5
+                    self.kill()
+                else:
+                    score -= 5
+                    self.kill()
 
 
         else:
@@ -111,7 +148,7 @@ class Bullet(pygame.sprite.Sprite):
             bullet_group.remove(self)
 
 def shootboom(player):
-    new_boom = Boomerang(player.rect.centerx, player.rect.centery, player.dir * math.cos(player.rotation) * 2, player.dir_y * math.sin(player.rotation) * 2, player)
+    new_boom = Boomerang(player.rect.centerx, player.rect.centery, player.dir * math.cos(player.rotation) * 10, player.dir_y * math.sin(player.rotation) * 10, player)
     bullet_group.add(new_boom)
 
 
