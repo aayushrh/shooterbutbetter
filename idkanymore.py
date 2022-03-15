@@ -234,10 +234,13 @@ class Enemy(pygame.sprite.Sprite):
    def update(self, enemy_bullet_group, target, screen, bullet_group):
        if self.cooldown == 0:
            self.image = pygame.image.load('images/enemy.png')
-           e_bullets_list = pygame.sprite.spritecollide(self, bullet_group, True)
-           for e in e_bullets_list:
-               self.alive = False
-               return 1
+           for b in bullet_group:
+               if math.sqrt((b.rect.x - self.rect.x) ** 2 + (b.rect.y - self.rect.y) ** 2) <= 40:
+                   if type(b) == type(Bullet):
+                       b.kill()
+                   else:
+                       b.hit = True
+                   self.alive = False
            if self.fireclock == 0:
                if self.volley == 0:
                    self.volley = self.type.attack.volley
@@ -477,42 +480,33 @@ class Enemy_Bullet(pygame.sprite.Sprite):
 
 """def main():
    pygame.init()
-
    # Create Game Variables
    clock = pygame.time.Clock()
    menu = True
    game = False
    pygame.display.set_caption('Raiden')
    screen = pygame.display.set_mode((WIN_W, WIN_H), pygame.SRCALPHA)
-
    button_group = pygame.sprite.Group()
    ship_group = pygame.sprite.Group()
    bullet_group = pygame.sprite.Group()
    enemy_group = pygame.sprite.Group()
    enemy_bullet_group = pygame.sprite.Group()
-
    play_button = Button(WIN_W/2, WIN_H/2, WIN_W/3, WIN_H/10)
    button_group.add(play_button)
-
    while True:
        play_button.activate = False
        while menu:
            for event in pygame.event.get():
                if event.type == pygame.QUIT:
                    sys.exit()
-
            play_button.update()
            if play_button.activate:
                menu = False
                game = True
-
            screen.fill(BLACK)
            screen.blit(play_button.image, play_button.rect)
-
            pygame.display.flip()
            clock.tick(fps)
-
-
        player = Ship(ship_type, WIN_W/2, WIN_H/2)
        ship_group.add(player)
        #t = Enemy(enemy_type_spiral, (random.randrange(WIN_W // 5, WIN_W * 4 // 5), 0), player)
@@ -521,13 +515,10 @@ class Enemy_Bullet(pygame.sprite.Sprite):
        #enemy_group.add(t)
        t = Enemy(enemy_type_rocket, (random.randrange(WIN_W // 5, WIN_W * 4 // 5), 0), player)
        enemy_group.add(t)
-
-
        while game:
            for event in pygame.event.get():
                if event.type == pygame.QUIT:
                    sys.exit()
-
            screen.fill(WHITE)
            for s in ship_group:
                s.update(bullet_group, enemy_bullet_group, game)
@@ -547,7 +538,6 @@ class Enemy_Bullet(pygame.sprite.Sprite):
                e.update(enemy_bullet_group, player, screen)
            for e in enemy_bullet_group:
                e.update(player)
-
            for s in ship_group:
                screen.blit(s.image, s.rect)
            for b in bullet_group:
@@ -556,10 +546,7 @@ class Enemy_Bullet(pygame.sprite.Sprite):
                screen.blit(e.image, e.rect)
            for e in enemy_bullet_group:
                screen.blit(e.image, e.rect)
-
-
            pygame.display.flip()
            clock.tick(fps)
-
 if __name__ == "__main__":
    main()"""
