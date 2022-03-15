@@ -45,9 +45,13 @@ class Boomerang(pygame.sprite.Sprite):
         self.player = player
         self.target = player
     def update(self):
+        if self.rect.centerx < 0 or self.rect.centerx > width:
+            self.kill()
+        if self.rect.centery < 0 or self.rect.centery > height:
+            self.kill()
         if self.hit:
             for e in enemy_group:
-                if math.sqrt((self.rect.centerx - e.rect.centerx) ** 2 + (self.rect.centery - e.rect.centery) ** 2) <= 300:
+                if math.sqrt((self.rect.centerx - e.rect.centerx) ** 2 + (self.rect.centery - e.rect.centery) ** 2) <= 100:
                     self.target = e
                     break
                 else:
@@ -180,6 +184,11 @@ def spawn(player):
                                  player, hp, dog)
         enemy_group.add(t)
 
+def noboom(group):
+    for b in group:
+        if type(b) != type(Bullet):
+            return False
+    return True
 
 class Player:
     def __init__(self, gamemode):
@@ -254,8 +263,9 @@ class Player:
             if left_clicked and self.cooldown_counter == 0:
                 #shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
                       #self.bullet_speed)
-                shootboom(self)
-                self.cooldown_counter = self.cooldown
+                if(noboom(bullet_group)):
+                    shootboom(self)
+                    self.cooldown_counter = self.cooldown
             if right_clicked and self.cooldown_counter == 0:
                 shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
                       self.bullet_speed)
