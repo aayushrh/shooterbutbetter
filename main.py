@@ -142,14 +142,14 @@ class Bullet(pygame.sprite.Sprite):
         self.size = 5
         self.x_speed = x_speed
         self.y_speed = y_speed
-        self.lifetime = 2000
 
     def update(self):
         self.rect.x += self.x_speed
         self.rect.y += self.y_speed
-        self.lifetime -= 1
-        if self.lifetime == 0:
-            bullet_group.remove(self)
+        if self.rect.centerx < 0 or self.rect.centerx > width:
+            self.kill()
+        if self.rect.centery < 0 or self.rect.centery > height:
+            self.kill()
 
 def shootboom(player):
     new_boom = Boomerang(player.rect.centerx, player.rect.centery, player.dir * math.cos(player.rotation) * 10, player.dir_y * math.sin(player.rotation) * 10, player)
