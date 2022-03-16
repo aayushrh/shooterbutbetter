@@ -32,6 +32,9 @@ highscore = 0
 civil_saved = 0
 civil_needed = 3
 
+shotgun = False
+boomerang = False
+
 class Boomerang(pygame.sprite.Sprite):
     def __init__(self, x, y, x_speed, y_speed, player):
         super().__init__()
@@ -69,15 +72,17 @@ class Boomerang(pygame.sprite.Sprite):
                 dir = -1
                 dir_y = 1
             if not self.rect.centerx - self.target.rect.centerx == 0 and not self.rect.centery - self.target.rect.centery == 0:
-                self.rect.centerx += dir * math.cos(math.atan(abs(self.rect.centery - self.target.rect.centery) / abs(self.rect.centerx - self.target.rect.centery))) * 20
-                self.rect.centery += dir_y * math.sin(math.atan(abs(self.rect.centery - self.target.rect.centery) / abs(self.rect.centerx - self.target.rect.centery))) * 20
+                #self.rect.centerx += dir * math.cos(math.atan(abs(self.rect.centery - self.target.rect.centery) / abs(self.rect.centery - self.target.rect.centery))) * 20
+                #self.rect.centery += dir_y * math.sin(math.atan(abs(self.rect.centery - self.target.rect.centery) / abs(self.rect.centery - self.target.rect.centery))) * 20
+                self.rect.centerx -= (self.rect.centerx - self.target.rect.centerx) * 0.125
+                self.rect.centery -= (self.rect.centery - self.target.rect.centery) * 0.125
             else:
                 self.target = self.player
-            if math.sqrt((self.rect.centerx - self.target.rect.centerx) ** 2 + (self.rect.centery - self.target.rect.centery) ** 2) <= 10:
+            if math.sqrt((self.rect.centerx - self.target.rect.centerx) ** 2 + (self.rect.centery - self.target.rect.centery) ** 2) <= 40:
                 if not self.target == self.player:
                     for e in enemy_group:
                         if math.sqrt((self.rect.centerx - e.rect.centerx) ** 2 + (
-                                self.rect.centery - e.rect.centery) ** 2) <= 300:
+                                self.rect.centery - e.rect.centery) ** 2) <= 100:
                             self.target = e
                             break
                         else:
@@ -151,8 +156,9 @@ class Bullet(pygame.sprite.Sprite):
         if self.rect.centery < 0 or self.rect.centery > height:
             self.kill()
 
+
 def shootboom(player):
-    new_boom = Boomerang(player.rect.centerx, player.rect.centery, player.dir * math.cos(player.rotation) * 10, player.dir_y * math.sin(player.rotation) * 10, player)
+    new_boom = Boomerang(player.rect.centerx, player.rect.centery, player.dir * math.cos(player.rotation) * 20, player.dir_y * math.sin(player.rotation) * 20, player)
     bullet_group.add(new_boom)
 
 
@@ -225,7 +231,7 @@ class Player:
                      mouse_pos[1] / (true_screen.get_rect().size[1] / height))
         key = pygame.key.get_pressed()
         if key[pygame.K_l]:
-            self.dead = True
+            self.dead = False
         if self.rect.centerx - mouse_pos[0] != 0:
             self.rotation = math.atan(abs(self.rect.centery - mouse_pos[1]) / abs(self.rect.centerx - mouse_pos[0]))
         else:
@@ -261,19 +267,22 @@ class Player:
                 self.dashcool = self.dashlen
         if self.weapon == 0:
             if left_clicked and self.cooldown_counter == 0:
-                #shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
-                      #self.bullet_speed)
-                if(noboom(bullet_group)):
-                    shootboom(self)
-                    self.cooldown_counter = self.cooldown
-            if right_clicked and self.cooldown_counter == 0:
                 shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
                       self.bullet_speed)
-                shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation - 0.25, True,
-                      self.bullet_speed)
-                shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + 0.25, True,
-                      self.bullet_speed)
+                self.cooldown_counter = self.cooldown
+            if right_clicked and self.cooldown_counter == 0:
+                if boomerang:
+                    if (noboom(bullet_group)):
+                        shootboom(self)
+                elif shotgun:
+                    shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
+                          self.bullet_speed)
+                    shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation - 0.25, True,
+                          self.bullet_speed)
+                    shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + 0.25, True,
+                          self.bullet_speed)
                 self.cooldown_counter = self.cooldown * 2
+
 
             if self.cooldown_counter > 0:
                 self.cooldown_counter -= 1
@@ -294,6 +303,8 @@ class Player:
         if self.health <= 0:
             self.dead = True
 
+        self.rect.clamp_ip(screen.get_rect())
+
 
 true_screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 screen = pygame.Surface((width, height))
@@ -311,6 +322,8 @@ def main():
     global highscore
     global civil_saved
     global civil_needed
+    global boomerang
+    global shotgun
 
     dogb = False
     catb = False
@@ -384,6 +397,7 @@ def main():
     heart_image = pygame.image.load("images/heart.png")
     menu = False
     play = True
+    weaponm = False
     score = 0
     spawn_rate = 150
     lvl_time = 1000
@@ -616,9 +630,50 @@ def main():
                     if event.key == pygame.K_LEFT:
                         petm = False
                         menu = True
+                    if event.key == pygame.K_RIGHT:
+                        petm = False
+                        weaponm = True
                     if event.key == pygame.K_e:
                         play = True
                         petm = False
+        elif weaponm:
+            screen.fill(BLACK)
+            game_menu = pygame.image.load("images/gun_menu.png")
+            menu_rect = pygame.Rect(width/2 - game_menu.get_width()/2, height/2 - game_menu.get_height()/2, 970, 620)
+            screen.blit(game_menu, menu_rect)
+            score_txt = font2.render(str(score), 1, WHITE)
+            scorepos = score_txt.get_rect()
+            scorepos.centerx = width - 50
+            scorepos.centery = 20
+            screen.blit(score_txt, scorepos)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    sys.exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        mouse_pos = pygame.mouse.get_pos()
+                        mouse_pos = (mouse_pos[0] / (true_screen.get_rect().size[0] / width),
+                                     mouse_pos[1] / (true_screen.get_rect().size[1] / height))
+                        print(mouse_pos)
+                        if (781 < mouse_pos[0] and mouse_pos[0] < 999 and 247 < mouse_pos[1] and mouse_pos[1] < 301):
+                            pass
+                        if (781 < mouse_pos[0] and mouse_pos[0] < 999 and 357 < mouse_pos[1] and mouse_pos[1] < 411):
+                            if score >= 10:
+                                boomerang = True
+                                shotgun = False
+                                score -= 10
+                        if (781 < mouse_pos[0] and mouse_pos[0] < 999 and 475 < mouse_pos[1] and mouse_pos[1] < 527):
+                            if score >= 10:
+                                shotgun = True
+                                boomerang = False
+                                score -= 10
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:
+                        weaponm = False
+                        petm = True
+                    if event.key == pygame.K_e:
+                        play = True
+                        weaponm = False
 
         true_screen.blit(pygame.transform.scale(screen, true_screen.get_rect().size), (0, 0))
         pygame.display.flip()
