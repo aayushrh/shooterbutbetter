@@ -40,8 +40,8 @@ SIZE = 30
 class Boomerang(pygame.sprite.Sprite):
     def __init__(self, x, y, x_speed, y_speed, player):
         super().__init__()
-        self.image = pygame.image.load("images/boomerang.png")
-        self.rect = pygame.Rect((x,y), (10, 10))
+        self.image = pygame.transform.scale(pygame.image.load("images/boomerang.png"), (SIZE, SIZE))
+        self.rect = pygame.Rect((x,y), self.image.get_size())
         self.size = 20
         self.x_speed = x_speed
         self.y_speed = y_speed
@@ -49,7 +49,10 @@ class Boomerang(pygame.sprite.Sprite):
         self.player = player
         self.target = player
         self.type = "bm"
+        self.amogus = 0
     def update(self):
+        self.image = pygame.transform.rotate(pygame.image.load("images/boomerang.png"), self.amogus)
+        self.amogus += 10
         if self.rect.centerx < 0 or self.rect.centerx > width:
             self.kill()
         if self.rect.centery < 0 or self.rect.centery > height:
@@ -216,7 +219,6 @@ class Player:
         self.bullet_speed = 10
         self.weapon = 0
         self.primed = False
-        self.bomb = None
         self.primed_cooldown = 0
         self.gamemode = gamemode
         self.dashcool = -1000
