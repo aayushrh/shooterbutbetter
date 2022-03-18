@@ -2,6 +2,7 @@ import pygame, os, sys, math, random
 
 WIN_W = 1280
 WIN_H = 720
+SIZE = 30
 
 WHITE = (255, 255, 255)
 LIGHT_GREY = (150, 150, 150)
@@ -184,12 +185,12 @@ class Enemy(pygame.sprite.Sprite):
    def __init__(self, enemy_type, startpos, target, hp, dog):
        pygame.sprite.Sprite.__init__(self)
        self.type = enemy_type
-       font = pygame.font.Font("fonts/fourside.ttf", 70)
+       font = pygame.font.Font("fonts/fourside.ttf", SIZE * 2)
        if not dog:
            self.image = font.render("!", 1, WHITE)
        else:
            self.image = font.render("!", 1, RED)
-       self.rect = self.image.get_rect()
+       self.rect = pygame.Rect(startpos, (SIZE, SIZE))
        self.rect.x = startpos[0]
        self.rect.y = startpos[1]
        self.fireclock = 0
@@ -233,10 +234,10 @@ class Enemy(pygame.sprite.Sprite):
 
    def update(self, enemy_bullet_group, target, screen, bullet_group):
        if self.cooldown == 0:
-           self.image = pygame.image.load('images/enemy.png')
+           self.image = pygame.transform.scale(pygame.image.load('images/enemy.png'), (SIZE, SIZE))
            for b in bullet_group:
                if math.sqrt((b.rect.x - self.rect.x) ** 2 + (b.rect.y - self.rect.y) ** 2) <= 40:
-                   if type(b) == type(Bullet):
+                   if b.type == "bu":
                        b.kill()
                    else:
                        b.hit = True
