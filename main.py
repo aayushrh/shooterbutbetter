@@ -35,18 +35,20 @@ civil_needed = 3
 shotgun = False
 boomerang = False
 
+SIZE = 30
+
 class Boomerang(pygame.sprite.Sprite):
     def __init__(self, x, y, x_speed, y_speed, player):
         super().__init__()
-        self.image = pygame.Surface((20, 20))
-        self.image.fill(WHITE)
-        self.rect = pygame.Rect((x, y), self.image.get_size())
+        self.image = pygame.image.load("images/boomerang.png")
+        self.rect = pygame.Rect((x,y), (10, 10))
         self.size = 20
         self.x_speed = x_speed
         self.y_speed = y_speed
         self.hit = False
         self.player = player
         self.target = player
+        self.type = "bm"
     def update(self):
         if self.rect.centerx < 0 or self.rect.centerx > width:
             self.kill()
@@ -98,12 +100,12 @@ class Boomerang(pygame.sprite.Sprite):
 class Civilians(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
-        font = pygame.font.Font("fonts/fourside.ttf", 70)
+        font = pygame.font.Font("fonts/fourside.ttf", SIZE * 2)
         if (not dog):
             self.image = font.render("!", 1, WHITE)
         else:
             self.image = font.render("!", 1, GREEN)
-        self.rect = pygame.Rect(x, y, 40, 40)
+        self.rect = pygame.Rect(x, y, SIZE, SIZE)
         self.size = 40
         self.tick = 1
         self.rotation = 1
@@ -115,7 +117,7 @@ class Civilians(pygame.sprite.Sprite):
         global score
         global civil_saved
         if self.cooldown == 0:
-            self.image = pygame.image.load('images/civilian.png')
+            self.image = pygame.transform.scale(pygame.image.load('images/civilian.png'), (SIZE, SIZE))
             if self.tick <= 0:
                 self.rect.y += (1 * self.speed)
                 self.rect.x += (random.randint(-1, 1) if random.randint(5, 5) == 5 else 0)
@@ -147,6 +149,7 @@ class Bullet(pygame.sprite.Sprite):
         self.size = 5
         self.x_speed = x_speed
         self.y_speed = y_speed
+        self.type = "bu"
 
     def update(self):
         self.rect.x += self.x_speed
@@ -198,8 +201,8 @@ def noboom(group):
 
 class Player:
     def __init__(self, gamemode):
-        self.image = pygame.image.load("images/character.png")
-        self.rect = pygame.Rect(width / 2, height / 2, 40, 40)
+        self.image = pygame.transform.scale(pygame.image.load("images/character.png"), (SIZE, SIZE))
+        self.rect = pygame.Rect(width / 2, height / 2, SIZE, SIZE)
         self.size = 10
         self.speed = 1
         self.rotation = 0
@@ -340,7 +343,9 @@ def main():
     pygame.mixer.init()
     clock = pygame.time.Clock()
 
-    civil_needed = 3
+    shotgun = boomerang = False
+
+    civil_needed = 1
 
     i = 0
     break_var = False
@@ -400,7 +405,7 @@ def main():
     weaponm = False
     score = 0
     spawn_rate = 150
-    lvl_time = 1000
+    lvl_time = 500
     for t in enemy_group:
         enemy_group.remove(t)
 
@@ -504,12 +509,12 @@ def main():
 
             if not len(enemy_group):
                 for c in civil_group:
-                    if (c.speed < 2 or (horse and c.speed <= 2)):
+                    if (c.speed < 4 or (horse and c.speed <= 4)):
                         c.speed *= 2
 
             if len(enemy_group):
                 for c in civil_group:
-                    if (c.speed == 2 or (horse and c.speed == 4)):
+                    if (c.speed == 4 or (horse and c.speed == 8)):
                         c.speed /= 2
 
             if horse and len(civil_group):
