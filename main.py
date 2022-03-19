@@ -310,7 +310,7 @@ class Player:
         for l in enemy_bullet_group:
             if abs(l.rect.centerx - self.rect.centerx) < self.size * 2 and abs(
                     l.rect.centery - self.rect.centery) < self.size * 2:  # and self.healthcounter >= 0:
-                #self.health -= 1
+                self.health -= 1
                 l.kill()
                 self.healthcounter = 100
 
@@ -434,7 +434,6 @@ def main():
         enemy_bullet_group.remove(s)
     r = 0
     r_count = 30
-    score = 10
     while True:
         if play:
             level_counter += 1
