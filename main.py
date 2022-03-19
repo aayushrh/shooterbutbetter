@@ -34,6 +34,7 @@ civil_needed = 3
 
 shotgun = False
 boomerang = False
+presicion = False
 
 SIZE = 30
 
@@ -212,6 +213,7 @@ class Player:
         self.dir = 1
         self.dir_y = 1
         self.cooldown_counter = 0
+        self.scooldown_counter = 0
         self.cooldown = 20
         self.health = 5
         self.healthcounter = 0
@@ -227,6 +229,7 @@ class Player:
         self.dashcooltime = 250
 
     def update(self, left_clicked, right_clicked, true_screen):
+        global score
         self.dashcool -= 1
         if self.dashcool == 0:
             self.speed /= self.dashspeed
@@ -275,7 +278,7 @@ class Player:
                 shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
                       self.bullet_speed)
                 self.cooldown_counter = self.cooldown
-            if right_clicked and self.cooldown_counter == 0:
+            if right_clicked and self.scooldown_counter == 0:
                 if boomerang:
                     if (noboom(bullet_group)):
                         shootboom(self)
@@ -286,16 +289,28 @@ class Player:
                           self.bullet_speed)
                     shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + 0.25, True,
                           self.bullet_speed)
-                self.cooldown_counter = self.cooldown * 2
-
+                    self.scooldown_counter = self.cooldown * 2
+                elif presicion:
+                    for e in enemy_group:
+                        if math.sqrt((e.rect.centerx - mouse_pos[0]) ** 2 + (e.rect.centery - mouse_pos[1]) ** 2) <= SIZE:
+                            enemy_group.remove(e)
+                            score += 1
+                    for e in civil_group:
+                        if math.sqrt((e.rect.centerx - mouse_pos[0]) ** 2 + (e.rect.centery - mouse_pos[1]) ** 2) <= SIZE:
+                            civil_group.remove(e)
+                            score -= 5
+                    self.scooldown_counter = self.cooldown * 20
 
             if self.cooldown_counter > 0:
                 self.cooldown_counter -= 1
 
+            if self.scooldown_counter > 0:
+                self.scooldown_counter -= 1
+
         for l in enemy_bullet_group:
             if abs(l.rect.centerx - self.rect.centerx) < self.size * 2 and abs(
                     l.rect.centery - self.rect.centery) < self.size * 2:  # and self.healthcounter >= 0:
-                self.health -= 1
+                #self.health -= 1
                 l.kill()
                 self.healthcounter = 100
 
@@ -329,6 +344,7 @@ def main():
     global civil_needed
     global boomerang
     global shotgun
+    global presicion
 
     dogb = False
     catb = False
@@ -345,7 +361,7 @@ def main():
     pygame.mixer.init()
     clock = pygame.time.Clock()
 
-    shotgun = boomerang = False
+    shotgun = boomerang = presicion = False
 
     civil_needed = 2
 
@@ -418,6 +434,7 @@ def main():
         enemy_bullet_group.remove(s)
     r = 0
     r_count = 30
+    score = 10
     while True:
         if play:
             level_counter += 1
@@ -605,7 +622,6 @@ def main():
                         mouse_pos = pygame.mouse.get_pos()
                         mouse_pos = (mouse_pos[0] / (true_screen.get_rect().size[0] / width),
                                      mouse_pos[1] / (true_screen.get_rect().size[1] / height))
-                        print(mouse_pos)
                         if (781 < mouse_pos[0] and mouse_pos[0] < 999 and 247 < mouse_pos[1] and mouse_pos[1] < 301):
                             if (score >= 7 and not dog and dogb == False):
                                 dog = True
@@ -663,16 +679,19 @@ def main():
                                      mouse_pos[1] / (true_screen.get_rect().size[1] / height))
                         print(mouse_pos)
                         if (781 < mouse_pos[0] and mouse_pos[0] < 999 and 247 < mouse_pos[1] and mouse_pos[1] < 301):
-                            pass
+                            if score >= 10:
+                                presicion = True
+                                shotgun = boomerang = False
+                                score -= 10
                         if (781 < mouse_pos[0] and mouse_pos[0] < 999 and 357 < mouse_pos[1] and mouse_pos[1] < 411):
                             if score >= 10:
                                 boomerang = True
-                                shotgun = False
+                                shotgun = presicion = False
                                 score -= 10
                         if (781 < mouse_pos[0] and mouse_pos[0] < 999 and 475 < mouse_pos[1] and mouse_pos[1] < 527):
                             if score >= 10:
                                 shotgun = True
-                                boomerang = False
+                                boomerang = presicion = False
                                 score -= 10
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
