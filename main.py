@@ -347,7 +347,7 @@ def main():
 
     shotgun = boomerang = False
 
-    civil_needed = 1
+    civil_needed = 2
 
     i = 0
     break_var = False
