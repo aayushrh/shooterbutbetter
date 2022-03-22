@@ -403,13 +403,8 @@ def main():
 
 	while not break_var:
 		screen.fill(BLACK)
-		cursor_img_rect.center = pygame.mouse.get_pos()
-		cursor_img_rect.centerx /= (true_screen.get_width()/screen.get_width())
-		cursor_img_rect.centery /= (true_screen.get_width()/screen.get_width())
-		screen.blit(pygame.image.load("images/cross.png"), cursor_img_rect)
 		screen.blit(title, titlepos)
 		screen.blit(click1, clickpos1)
-
 		if i > 10:
 			if i > 20:
 				i = 0
@@ -717,14 +712,14 @@ def main():
 						play = True
 						weaponm = False
 
-		cursor_img_rect.centerx = pygame.mouse.get_pos()[0]
 		cursor_img_rect.top = pygame.mouse.get_pos()[1]
+		cursor_img_rect.centerx = pygame.mouse.get_pos()[0]
 		cursor_img_rect.centerx /= (true_screen.get_width()/screen.get_width())
-		cursor_img_rect.top /= (true_screen.get_width()/screen.get_width())
-		if presicion and not(weaponm or menu or petm):
+		cursor_img_rect.top /= (true_screen.get_height()/screen.get_height())
+		if presicion:
 			cursor_img_rect.centerx += random.randint(-30, 30)
-			cursor_img_rect.centery += random.randint(-30, 30)
-		screen.blit(pygame.transform.rotate(pygame.image.load("images/cross.png"), 0 if (petm or weaponm or menu) else (math.atan2(player.rect.centerx - cursor_img_rect.centerx, player.rect.centery - cursor_img_rect.centery)*(180/math.pi))), cursor_img_rect)
+			cursor_img_rect.top += random.randint(-30, 30)
+		screen.blit(pygame.transform.rotate(pygame.image.load("images/cross.png"), 0 if (petm or weaponm or menu) else (math.atan2(player.rect.centerx - cursor_img_rect.centerx, player.rect.centery - cursor_img_rect.top)*(180/math.pi))), cursor_img_rect)
 		true_screen.blit(pygame.transform.scale(screen, true_screen.get_rect().size), (0, 0))
 		pygame.display.flip()
 		clock.tick(60)
