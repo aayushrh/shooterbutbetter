@@ -238,14 +238,14 @@ class Player:
 		self.dashcool -= 1
 		if self.dashcool == 0:
 			self.speed /= self.dashspeed
-			self.invic = False
+			self.invinc = False
 			pass
 		mouse_pos = pygame.mouse.get_pos()
 		mouse_pos = (mouse_pos[0] / (true_screen.get_rect().size[0] / width),
 					 mouse_pos[1] / (true_screen.get_rect().size[1] / height))
 		key = pygame.key.get_pressed()
 		if key[pygame.K_l]:
-			self.dead = False
+			self.dead = True
 		if self.rect.centerx - mouse_pos[0] != 0:
 			self.rotation = math.atan(abs(self.rect.centery - mouse_pos[1]) / abs(self.rect.centerx - mouse_pos[0]))
 		else:
@@ -278,8 +278,8 @@ class Player:
 				self.rect.x += self.speed
 			if key[pygame.K_SPACE] and self.dashcool <= -self.dashcooltime:
 				self.speed *= self.dashspeed
-				self.invic = True
 				self.dashcool = self.dashlen
+				self.invinc = True
 		if self.weapon == 0:
 			if left_clicked and self.cooldown_counter == 0:
 				shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
@@ -316,7 +316,7 @@ class Player:
 
 		for l in enemy_bullet_group:
 			if abs(l.rect.centerx - self.rect.centerx) < self.size * 2 and abs(
-					l.rect.centery - self.rect.centery) < self.size * 2 and not self.invinc:  # and self.healthcounter >= 0:
+					l.rect.centery - self.rect.centery) < self.size * 2 and not self.invinc:
 				self.health -= 1
 				l.kill()
 				self.healthcounter = 100
@@ -336,7 +336,7 @@ class Player:
 true_screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 screen = pygame.Surface((width, height))
 pygame.mouse.set_visible(False)
-cursor_img_rect = pygame.image.load("images/cross.png").get_rect()
+cursor_img_rect = pygame.image.load("images/cross0.png").get_rect()
 
 def main():
 	global score
@@ -409,7 +409,7 @@ def main():
 		cursor_img_rect.center = pygame.mouse.get_pos()
 		cursor_img_rect.centerx /= (true_screen.get_width()/screen.get_width())
 		cursor_img_rect.centery /= (true_screen.get_width()/screen.get_width())
-		screen.blit(pygame.image.load("images/cross.png"), cursor_img_rect)
+		screen.blit(pygame.image.load("images/cross0.png"), cursor_img_rect)
 		screen.blit(title, titlepos)
 		screen.blit(click1, clickpos1)
 
@@ -727,7 +727,7 @@ def main():
 		if presicion and not(weaponm or menu or petm):
 			cursor_img_rect.centerx += random.randint(-30, 30)
 			cursor_img_rect.centery += random.randint(-30, 30)
-		screen.blit(pygame.transform.rotate(pygame.image.load("images/cross.png"), 0 if (petm or weaponm or menu) else (math.atan2(player.rect.centerx - cursor_img_rect.centerx, player.rect.centery - cursor_img_rect.centery)*(180/math.pi))), cursor_img_rect)
+		screen.blit(pygame.transform.rotate(pygame.image.load("images/cross3.png"), 0 if (petm or weaponm or menu) else (math.atan2(player.rect.centerx - cursor_img_rect.centerx, player.rect.centery - cursor_img_rect.centery)*(180/math.pi))), cursor_img_rect)
 		true_screen.blit(pygame.transform.scale(screen, true_screen.get_rect().size), (0, 0))
 		pygame.display.flip()
 		clock.tick(60)
