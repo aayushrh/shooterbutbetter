@@ -231,12 +231,14 @@ class Player:
 		self.dashlen = 10
 		self.dashspeed = 5
 		self.dashcooltime = 250
+		self.invinc = False
 
 	def update(self, left_clicked, right_clicked, true_screen):
 		global score
 		self.dashcool -= 1
 		if self.dashcool == 0:
 			self.speed /= self.dashspeed
+			self.invic = False
 			pass
 		mouse_pos = pygame.mouse.get_pos()
 		mouse_pos = (mouse_pos[0] / (true_screen.get_rect().size[0] / width),
@@ -276,6 +278,7 @@ class Player:
 				self.rect.x += self.speed
 			if key[pygame.K_SPACE] and self.dashcool <= -self.dashcooltime:
 				self.speed *= self.dashspeed
+				self.invic = True
 				self.dashcool = self.dashlen
 		if self.weapon == 0:
 			if left_clicked and self.cooldown_counter == 0:
@@ -313,7 +316,7 @@ class Player:
 
 		for l in enemy_bullet_group:
 			if abs(l.rect.centerx - self.rect.centerx) < self.size * 2 and abs(
-					l.rect.centery - self.rect.centery) < self.size * 2:  # and self.healthcounter >= 0:
+					l.rect.centery - self.rect.centery) < self.size * 2 and not self.invinc:  # and self.healthcounter >= 0:
 				self.health -= 1
 				l.kill()
 				self.healthcounter = 100
