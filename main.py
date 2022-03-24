@@ -336,7 +336,7 @@ class Player:
 true_screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 screen = pygame.Surface((width, height))
 pygame.mouse.set_visible(False)
-cursor_img_rect = pygame.image.load("images/cross0.png").get_rect()
+cursor_img_rect = pygame.image.load("images/cross.png").get_rect()
 
 def main():
 	global score
@@ -409,7 +409,7 @@ def main():
 		cursor_img_rect.center = pygame.mouse.get_pos()
 		cursor_img_rect.centerx /= (true_screen.get_width()/screen.get_width())
 		cursor_img_rect.centery /= (true_screen.get_width()/screen.get_width())
-		screen.blit(pygame.image.load("images/cross0.png"), cursor_img_rect)
+		screen.blit(pygame.transform.rotate(pygame.image.load("images/cross.png"), 25), cursor_img_rect)
 		screen.blit(title, titlepos)
 		screen.blit(click1, clickpos1)
 
@@ -721,13 +721,16 @@ def main():
 						weaponm = False
 
 		cursor_img_rect.centerx = pygame.mouse.get_pos()[0]
-		cursor_img_rect.top = pygame.mouse.get_pos()[1]
+		if weaponm or menu or petm:
+			cursor_img_rect.top = pygame.mouse.get_pos()[1]
+		else:
+			cursor_img_rect.centery = pygame.mouse.get_pos()[1]
 		cursor_img_rect.centerx /= (true_screen.get_width()/screen.get_width())
-		cursor_img_rect.top /= (true_screen.get_width()/screen.get_width())
+		cursor_img_rect.centery /= (true_screen.get_width()/screen.get_width())
 		if presicion and not(weaponm or menu or petm):
 			cursor_img_rect.centerx += random.randint(-30, 30)
 			cursor_img_rect.centery += random.randint(-30, 30)
-		screen.blit(pygame.transform.rotate(pygame.image.load("images/cross3.png"), 0 if (petm or weaponm or menu) else (math.atan2(player.rect.centerx - cursor_img_rect.centerx, player.rect.centery - cursor_img_rect.centery)*(180/math.pi))), cursor_img_rect)
+		screen.blit(pygame.transform.rotate(pygame.image.load("images/cross.png"), 25 if (petm or weaponm or menu) else (math.atan2(player.rect.centerx - cursor_img_rect.centerx, player.rect.centery - cursor_img_rect.centery)*(180/math.pi))), cursor_img_rect)
 		true_screen.blit(pygame.transform.scale(screen, true_screen.get_rect().size), (0, 0))
 		pygame.display.flip()
 		clock.tick(60)
