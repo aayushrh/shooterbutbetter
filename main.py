@@ -53,7 +53,7 @@ class Boomerang(pygame.sprite.Sprite):
 		self.player = player
 		self.target = player
 		self.type = "bm"
-		self.amogus = 0
+		self.prevpos = (x, y)
 	def update(self):
 		self.image = pygame.transform.rotate(pygame.image.load("images/boomerang.png"), self.amogus)
 		self.amogus += 10
@@ -232,6 +232,7 @@ class Player:
 		self.dashspeed = 5
 		self.dashcooltime = 250
 		self.invinc = False
+		self.bullets = 4
 
 	def update(self, left_clicked, right_clicked, true_screen):
 		global score
@@ -290,13 +291,17 @@ class Player:
 					if (noboom(bullet_group)):
 						shootboom(self)
 				elif shotgun:
-					shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
-						  self.bullet_speed)
-					shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation - 0.25, True,
-						  self.bullet_speed)
-					shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + 0.25, True,
-						  self.bullet_speed)
-					self.scooldown_counter = self.cooldown * 2
+				# if math.floor(self.bullets) == 3:
+						#shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
+							  #self.bullet_speed)
+						#shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation - 0.25, True,
+							  #self.bullet_speed)
+						#shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + 0.25, True,
+							  #self.bullet_speed)
+					for e in range(math.floor(self.bullets/2)):
+						shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + e/6, True, self.bullet_speed)
+						shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation - e/6, True,self.bullet_speed)
+					self.scooldown_counter = 40
 				elif presicion:
 					for e in enemy_group:
 						if math.sqrt((e.rect.centerx - mouse_pos[0]) ** 2 + (e.rect.centery - mouse_pos[1]) ** 2) <= SIZE:
@@ -306,7 +311,10 @@ class Player:
 						if math.sqrt((e.rect.centerx - mouse_pos[0]) ** 2 + (e.rect.centery - mouse_pos[1]) ** 2) <= SIZE:
 							civil_group.remove(e)
 							score -= 5
-					self.scooldown_counter = self.cooldown*10
+					if self.cooldown * 10 >= 100:
+						self.scooldown_counter = self.cooldown*10
+					else:
+						self.scooldown_counter = 100
 
 			if self.cooldown_counter > 0:
 				self.cooldown_counter -= 1
@@ -448,8 +456,13 @@ def main():
 		enemy_bullet_group.remove(s)
 	r = 0
 	r_count = 30
+	score = 10
 	while True:
 		if play:
+			if player.dashcool/player.dashcooltime >= -1:
+				print(-(player.dashcool/player.dashcooltime) * 100)
+			else:
+				print(100)
 			level_counter += 1
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
@@ -585,6 +598,14 @@ def main():
 			screen.blit(lvl_txt, lvlpos)
 			screen.blit(font2.render(str(min(100, round((level_counter / lvl_time) * 100))) + '%', 1, WHITE), (10, 50))
 			screen.blit(font2.render(str(civil_saved) + '/' + str(civil_needed), 1, WHITE), (10, 100))
+
+			if player.dashcool/player.dashcooltime >= -1:
+				num = abs(player.dashcool/player.dashcooltime) * 100
+			else:
+				num = 100
+
+			screen.blit(font2.render(str(round(num)) + '%', 1, WHITE), (10, 150))
+
 		elif menu:
 			screen.fill(BLACK)
 			game_menu = pygame.image.load("images/menu_2.png")
@@ -612,6 +633,7 @@ def main():
 								if score >= 1 and player.cooldown > 1:
 									score -= 1
 									player.cooldown -= 1
+									player.bullets += 0.5
 							elif 246 < mouse_pos[1] < 301:
 								if score >= 2:
 									score -= 2
