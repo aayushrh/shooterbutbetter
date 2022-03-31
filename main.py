@@ -53,7 +53,7 @@ class Boomerang(pygame.sprite.Sprite):
 		self.player = player
 		self.target = player
 		self.type = "bm"
-		self.prevpos = (x, y)
+		self.amogus = 0
 	def update(self):
 		self.image = pygame.transform.rotate(pygame.image.load("images/boomerang.png"), self.amogus)
 		self.amogus += 10
@@ -142,6 +142,7 @@ class Civilians(pygame.sprite.Sprite):
 				else:
 					score -= 5
 					self.kill()
+				break
 
 
 		else:
@@ -298,9 +299,9 @@ class Player:
 							  #self.bullet_speed)
 						#shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + 0.25, True,
 							  #self.bullet_speed)
-					for e in range(math.floor(self.bullets/2)):
-						shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + e/6, True, self.bullet_speed)
-						shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation - e/6, True,self.bullet_speed)
+					for e in range(math.floor(self.bullets/2) * 5):
+						shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + e/(self.bullets * 10), True, self.bullet_speed)
+						shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation - e/(self.bullets * 10), True,self.bullet_speed)
 					self.scooldown_counter = 40
 				elif presicion:
 					for e in enemy_group:
@@ -456,13 +457,8 @@ def main():
 		enemy_bullet_group.remove(s)
 	r = 0
 	r_count = 30
-	score = 10
 	while True:
 		if play:
-			if player.dashcool/player.dashcooltime >= -1:
-				print(-(player.dashcool/player.dashcooltime) * 100)
-			else:
-				print(100)
 			level_counter += 1
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
