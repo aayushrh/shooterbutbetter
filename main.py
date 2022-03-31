@@ -409,9 +409,7 @@ def main():
 
 	font2 = pygame.font.Font("fonts/fourside.ttf", 35)
 	click1 = font2.render(("-- High : " + str(highscore) + " --"), 1, WHITE)
-	clickpos1 = click1.get_rect()
-	clickpos1.centerx = width / 2
-	clickpos1.centery = height / 2 + height / 4
+	click2 = font2.render(("-- Last : " + str(SAVE_DATA["lastscore"]) + " --"), 1, WHITE)
 
 	while not break_var:
 		screen.fill(BLACK)
@@ -420,7 +418,8 @@ def main():
 		cursor_img_rect.centery /= (true_screen.get_width()/screen.get_width())
 		screen.blit(pygame.transform.rotate(pygame.image.load("images/cross.png"), 25), cursor_img_rect)
 		screen.blit(title, titlepos)
-		screen.blit(click1, clickpos1)
+		screen.blit(click1, (width / 2 - click1.get_width() / 2, height / 2 + height / 4))
+		screen.blit(click2, (width / 2 - click1.get_width() / 2, height / 2 + height / 3))
 
 		if i > 10:
 			if i > 20:
@@ -569,7 +568,8 @@ def main():
 					highscore = level
 				with open(".store.txt", 'w') as f:
 					data = {
-						"highscore": highscore
+						"highscore": highscore,
+						"lastscore": level
 					}
 					f.write(str(data))
 				with open(".store.txt", 'r') as f:
