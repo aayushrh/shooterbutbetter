@@ -278,7 +278,7 @@ class Player:
 				self.rect.x -= self.speed
 			elif key[pygame.K_d] and self.rect.right < width:
 				self.rect.x += self.speed
-			if key[pygame.K_SPACE] and self.dashcool <= -self.dashcooltime:
+			if key[pygame.K_LSHIFT] and self.dashcool <= -self.dashcooltime:
 				self.speed *= self.dashspeed
 				self.dashcool = self.dashlen
 				self.invinc = True
