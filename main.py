@@ -143,8 +143,6 @@ class Civilians(pygame.sprite.Sprite):
 					score -= 5
 					self.kill()
 				break
-
-
 		else:
 			self.cooldown -= 1
 
@@ -213,7 +211,7 @@ class Player:
 		self.image = pygame.transform.scale(pygame.image.load("images/character.png"), (SIZE, SIZE))
 		self.rect = pygame.Rect(width / 2, height / 2, SIZE, SIZE)
 		self.size = 10
-		self.speed = 1
+		self.speed = 2
 		self.rotation = 0
 		self.dir = 1
 		self.dir_y = 1
@@ -223,7 +221,7 @@ class Player:
 		self.health = 5
 		self.healthcounter = 0
 		self.dead = False
-		self.bullet_speed = 10
+		self.bullet_speed = 7
 		self.weapon = 0
 		self.primed = False
 		self.primed_cooldown = 0
@@ -278,7 +276,7 @@ class Player:
 				self.rect.x -= self.speed
 			elif key[pygame.K_d] and self.rect.right < width:
 				self.rect.x += self.speed
-			if key[pygame.K_LSHIFT] and self.dashcool <= -self.dashcooltime:
+			if key[pygame.K_SPACE] and self.dashcool <= -self.dashcooltime:
 				self.speed *= self.dashspeed
 				self.dashcool = self.dashlen
 				self.invinc = True
@@ -300,8 +298,8 @@ class Player:
 						#shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + 0.25, True,
 							  #self.bullet_speed)
 					for e in range(math.floor(self.bullets/2) * 5):
-						shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + e/(self.bullets * 10), True, self.bullet_speed)
-						shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation - e/(self.bullets * 10), True,self.bullet_speed)
+						shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + e/(self.bullets * 5), True, self.bullet_speed)
+						shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation - e/(self.bullets * 5), True,self.bullet_speed)
 					self.scooldown_counter = 40
 				elif presicion:
 					for e in enemy_group:
@@ -409,7 +407,9 @@ def main():
 
 	font2 = pygame.font.Font("fonts/fourside.ttf", 35)
 	click1 = font2.render(("-- High : " + str(highscore) + " --"), 1, WHITE)
-	click2 = font2.render(("-- Last : " + str(SAVE_DATA["lastscore"]) + " --"), 1, WHITE)
+	clickpos1 = click1.get_rect()
+	clickpos1.centerx = width / 2
+	clickpos1.centery = height / 2 + height / 4
 
 	while not break_var:
 		screen.fill(BLACK)
@@ -418,8 +418,7 @@ def main():
 		cursor_img_rect.centery /= (true_screen.get_width()/screen.get_width())
 		screen.blit(pygame.transform.rotate(pygame.image.load("images/cross.png"), 25), cursor_img_rect)
 		screen.blit(title, titlepos)
-		screen.blit(click1, (width / 2 - click1.get_width() / 2, height / 2 + height / 4))
-		screen.blit(click2, (width / 2 - click1.get_width() / 2, height / 2 + height / 3))
+		screen.blit(click1, clickpos1)
 
 		if i > 10:
 			if i > 20:
@@ -456,6 +455,7 @@ def main():
 		enemy_bullet_group.remove(s)
 	r = 0
 	r_count = 30
+	score = 100
 	while True:
 		if play:
 			level_counter += 1
@@ -513,7 +513,7 @@ def main():
 					hp += 1
 				if not spawn_rate - 10 <= 0:
 					spawn_rate -= 10
-				lvl_time += 100
+				lvl_time += 50
 				score += 3
 				civil_saved -= civil_needed
 				if level % 2 == 0:
@@ -568,8 +568,7 @@ def main():
 					highscore = level
 				with open(".store.txt", 'w') as f:
 					data = {
-						"highscore": highscore,
-						"lastscore": level
+						"highscore": highscore
 					}
 					f.write(str(data))
 				with open(".store.txt", 'r') as f:
@@ -624,15 +623,15 @@ def main():
 							if 464 < mouse_pos[1] < 519:
 								if score >= 5:
 									score -= 5
-									player.speed += 4
+									player.speed += 2
 							elif 355 < mouse_pos[1] < 412:
-								if score >= 1 and player.cooldown > 1:
+								if score >= 1 and player.cooldown > 5:
 									score -= 1
 									player.cooldown -= 1
 									player.bullets += 0.5
 							elif 246 < mouse_pos[1] < 301:
-								if score >= 2:
-									score -= 2
+								if score >= 4:
+									score -= 4
 									player.health += 1
 				if event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_RIGHT:
