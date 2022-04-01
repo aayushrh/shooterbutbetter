@@ -233,10 +233,23 @@ class Player:
 		self.dashspeed = 5
 		self.dashcooltime = 250
 		self.invinc = False
-		self.bullets = 4
+		self.bullets = 50
+		self.souls = 0
+		self.soulspersoulcrystal = 3
+		self.soulcrystals = 0
+		self.soulrange = 256
+		self.soulexpanimcount = 0
 
 	def update(self, left_clicked, right_clicked, true_screen):
 		global score
+		self.soulcrystals += 1
+		if self.soulexpanimcount > 0:
+			self.soulexpanimcount -= 32
+			image = pygame.transform.scale(pygame.image.load("images/soulexp.png"), (self.soulrange * 2 * (self.soulexpanimcount / 512), self.soulrange * 2 * (self.soulexpanimcount / 512)))
+			imagerect = image.get_rect()
+			imagerect.centerx = self.rect.centerx
+			imagerect.centery = self.rect.centery
+			screen.blit(image, imagerect)
 		self.dashcool -= 1
 		if self.dashcool == 0:
 			self.speed /= self.dashspeed
@@ -278,10 +291,18 @@ class Player:
 				self.rect.x -= self.speed
 			elif key[pygame.K_d] and self.rect.right < width:
 				self.rect.x += self.speed
-			if key[pygame.K_LSHIFT] and self.dashcool <= -self.dashcooltime:
+			if (key[pygame.K_LSHIFT] or key[pygame.K_SPACE]) and self.dashcool <= -self.dashcooltime:
 				self.speed *= self.dashspeed
 				self.dashcool = self.dashlen
 				self.invinc = True
+			if key[pygame.K_q] and self.soulcrystals >= 3:
+				print("works")
+				self.soulcrystals = 0
+				for e in enemy_group:
+					if ((self.rect.centerx - e.rect.centerx)**2 + (self.rect.centery - e.rect.centery)**2)**0.5 <= self.soulrange:
+						enemy_group.remove(e)
+						score += 1
+				self.soulexpanimcount = 512
 		if self.weapon == 0:
 			if left_clicked and self.cooldown_counter == 0:
 				shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
@@ -345,7 +366,7 @@ class Player:
 true_screen = pygame.display.set_mode((width, height), pygame.RESIZABLE)
 screen = pygame.Surface((width, height))
 pygame.mouse.set_visible(False)
-cursor_img_rect = pygame.image.load("images/cross.png").get_rect()
+cursor_img_rect = pygame.image.load("images/cross0.png").get_rect()
 
 def main():
 	global score
@@ -416,7 +437,7 @@ def main():
 		cursor_img_rect.center = pygame.mouse.get_pos()
 		cursor_img_rect.centerx /= (true_screen.get_width()/screen.get_width())
 		cursor_img_rect.centery /= (true_screen.get_width()/screen.get_width())
-		screen.blit(pygame.transform.rotate(pygame.image.load("images/cross.png"), 25), cursor_img_rect)
+		screen.blit(pygame.transform.rotate(pygame.image.load(f"images/cross0.png"), 25), cursor_img_rect)
 		screen.blit(title, titlepos)
 		screen.blit(click1, (width / 2 - click1.get_width() / 2, height / 2 + height / 4))
 		screen.blit(click2, (width / 2 - click1.get_width() / 2, height / 2 + height / 3))
@@ -539,6 +560,11 @@ def main():
 					c.hp -= 1
 					if c.hp == 0:
 						enemy_group.remove(c)
+						player.souls += 1
+						print(player.souls, player.soulcrystals)
+						if player.souls >= player.soulspersoulcrystal:
+							player.souls = 0
+							player.soulcrystals += 1
 						score += 1
 					else:
 						c.alive = True
@@ -748,7 +774,7 @@ def main():
 		if presicion and not(weaponm or menu or petm):
 			cursor_img_rect.centerx += random.randint(-30, 30)
 			cursor_img_rect.centery += random.randint(-30, 30)
-		screen.blit(pygame.transform.rotate(pygame.image.load("images/cross.png"), 25 if (petm or weaponm or menu) else (math.atan2(player.rect.centerx - cursor_img_rect.centerx, player.rect.centery - cursor_img_rect.centery)*(180/math.pi))), cursor_img_rect)
+		screen.blit(pygame.transform.rotate(pygame.image.load(f"images/cross{min(3, player.soulcrystals)}.png"), 25 if (petm or weaponm or menu) else (math.atan2(player.rect.centerx - cursor_img_rect.centerx, player.rect.centery - cursor_img_rect.centery)*(180/math.pi))), cursor_img_rect)
 		true_screen.blit(pygame.transform.scale(screen, true_screen.get_rect().size), (0, 0))
 		pygame.display.flip()
 		clock.tick(60)
