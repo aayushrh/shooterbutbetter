@@ -296,7 +296,6 @@ class Player:
 				self.dashcool = self.dashlen
 				self.invinc = True
 			if key[pygame.K_q] and self.soulcrystals >= 3:
-				print("works")
 				self.soulcrystals = 0
 				for e in enemy_group:
 					if ((self.rect.centerx - e.rect.centerx)**2 + (self.rect.centery - e.rect.centery)**2)**0.5 <= self.soulrange:
