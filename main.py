@@ -549,7 +549,6 @@ def main():
 		enemy_bullet_group.remove(s)
 	r = 0
 	r_count = 30
-	score = 10
 	while True:
 		if play:
 			level_counter += 1
