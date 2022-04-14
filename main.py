@@ -35,6 +35,8 @@ shotgun = False
 boomerang = False
 presicion = False
 
+PLAYER = None
+
 SIZE = 32
 SAVE_DATA = None
 with open(".store.txt", 'r') as f:
@@ -62,12 +64,17 @@ class Explosion(pygame.sprite.Sprite):
 		for e in enemy_group:
 			if math.sqrt((e.rect.centery - self.rect.centery)**2 + (e.rect.centerx - self.rect.centerx)**2) <= 171:
 				enemy_group.remove(e)
-				score += 1
+				if e.type == idkanymore.enemy_type_regular:
+					PLAYER.exp += 1
+				elif e.type == idkanymore.enemy_type_spiral:
+					PLAYER.exp += 2
+				elif e.type == idkanymore.enemy_type_rocket:
+					PLAYER.exp += 3
 
 		for c in civil_group:
 			if math.sqrt((c.rect.centery - self.rect.centery)**2 + (c.rect.centerx - self.rect.centerx)**2) <= 171:
 				civil_group.remove(c)
-				score -= 5
+				score -= 3
 
 		self.kill()
 
@@ -182,15 +189,15 @@ class Civilians(pygame.sprite.Sprite):
 			hit = pygame.sprite.spritecollide(self, bullet_group, True)
 			for e in hit:
 				if(type(e) == type(Bullet)):
-					score -= 5
+					score -= 3
 					e.kill()
 					self.kill()
 				elif (type(e) == type(Explosion)):
-					score -= 5
+					score -= 3
 					e.blowup()
 					self.kill()
 				else:
-					score -= 5
+					score -= 3
 					self.kill()
 				break
 		else:
@@ -297,9 +304,15 @@ class Player:
 		self.soulexpanimcount = 512
 		self.rectexp = pygame.Rect(width / 2, height / 2, SIZE, SIZE)
 		self.aimbot = False
+		self.exp = 0
+		self.expneeded = 1
 
-	def update(self, left_clicked, right_clicked, true_screen):
+	def update(self, left_clicked, right_clicked, true_screen, level):
 		global score
+		if self.exp >= self.expneeded:
+			self.exp = 0
+			score += 1
+			self.expneeded += 1
 		if self.soulexpanimcount < self.soulcrystals * self.persoulcrystal - 1:
 			self.soulexpanimcount += abs(1/10 * (self.soulexpanimcount - (self.soulcrystals * self.persoulcrystal + 50)))
 			image = pygame.transform.scale(pygame.image.load("images/soulexp.png"), (
@@ -361,7 +374,12 @@ class Player:
 					if ((self.rect.centerx - e.rect.centerx) ** 2 + (
 							self.rect.centery - e.rect.centery) ** 2) ** 0.5 <= (self.soulcrystals * self.persoulcrystal)//2:
 						enemy_group.remove(e)
-						score += 1
+						if e.type == idkanymore.enemy_type_regular:
+							self.exp += 1 * max(1, level//2)
+						elif e.type == idkanymore.enemy_type_spiral:
+							self.exp += 2 * max(1, level//2)
+						elif e.type == idkanymore.enemy_type_rocket:
+							self.exp += 3 * max(1, level//2)
 				self.soulexpanimcount = 0
 				self.rectexp.centerx = self.rect.centerx
 				self.rectexp.centery = self.rect.centery
@@ -451,10 +469,8 @@ def main():
 	global highscore
 	global civil_saved
 	global civil_needed
-	global boomerang
-	global shotgun
-	global presicion
 	global SAVE_DATA
+	global PLAYER
 
 	dogb = False
 	catb = False
@@ -529,6 +545,7 @@ def main():
 		true_screen.blit(pygame.transform.scale(screen, true_screen.get_rect().size), (0, 0))
 
 	player = Player(0)
+	PLAYER = player
 	left_click = False
 	right_click = False
 	clock = pygame.time.Clock()
@@ -590,7 +607,12 @@ def main():
 						fir = True
 						if e.hp <= 0:
 							enemy_group.remove(e)
-							score += 1
+							if e.type == idkanymore.enemy_type_regular:
+								player.exp += 1 * max(1, level // 2)
+							elif e.type == idkanymore.enemy_type_spiral:
+								player.exp += 2 * max(1, level // 2)
+							elif e.type == idkanymore.enemy_type_rocket:
+								player.exp += 3 * max(1, level // 2)
 						catc = 300
 			if dog:
 				screen.blit(pygame.image.load("images/dog.png"), (
@@ -620,7 +642,7 @@ def main():
 			if (random.randint(1, spawn_rate) == 1):
 				spawn(player)
 
-			player.update(left_click, right_click, true_screen)
+			player.update(left_click, right_click, true_screen, level)
 			bullet_group.update()
 			civil_group.update()
 			enemy_bullet_group.draw(screen)
@@ -643,7 +665,12 @@ def main():
 							if player.souls >= player.soulspersoulcrystal:
 								player.souls = 0
 								player.soulcrystals += 1
-						score += 1
+						if c.type == idkanymore.enemy_type_regular:
+							player.exp += 1 * max(1, level//2)
+						elif c.type == idkanymore.enemy_type_spiral:
+							player.exp += 2 * max(1, level//2)
+						elif c.type == idkanymore.enemy_type_rocket:
+							player.exp += 3 * max(1, level//2)
 					else:
 						c.alive = True
 			screen.blit(player.image, player.rect)
@@ -728,13 +755,13 @@ def main():
 									score -= 5
 									player.speed += 2
 							elif 355 < mouse_pos[1] < 412:
-								if score >= 3 and player.cooldown > 5:
-									score -= 3
+								if score >= 2 and player.cooldown > 5:
+									score -= 2
 									player.cooldown -= 1
 									player.bullets += 0.5
 							elif 246 < mouse_pos[1] < 301:
-								if score >= 6:
-									score -= 6
+								if score >= 4:
+									score -= 4
 									player.health += 1
 				if event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_RIGHT:
