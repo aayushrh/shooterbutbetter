@@ -27,6 +27,7 @@ civil_group = pygame.sprite.Group()
 dog = False
 cat = False
 
+speedtime = 0
 
 civil_saved = 0
 civil_needed = 3
@@ -401,8 +402,8 @@ class Player:
 				self.soulexpanimcount = 0
 				self.rectexp.centerx = self.rect.centerx
 				self.rectexp.centery = self.rect.centery
-			if key[pygame.K_r]:
-				self.aimbot = not self.aimbot
+			#if key[pygame.K_r]:
+				#self.aimbot = not self.aimbot
 		if self.weapon == 0:
 			if self.aimbot and self.cooldown_counter == 0 and len(enemy_group) > 0:
 				for e in enemy_group:
@@ -489,6 +490,7 @@ def main():
 	global civil_needed
 	global SAVE_DATA
 	global PLAYER
+	global speedtime
 
 	dogb = False
 	catb = False
@@ -724,6 +726,7 @@ def main():
 						c.speed *= 2
 						fir = False
 			if player.dead:
+				print(speedtime)
 				if level > highscore:
 					highscore = level
 				with open(".store.txt", 'w') as f:
@@ -891,6 +894,10 @@ def main():
 			cursor_img_rect.centery = pygame.mouse.get_pos()[1]
 		cursor_img_rect.centerx /= (true_screen.get_width()/screen.get_width())
 		cursor_img_rect.centery /= (true_screen.get_width()/screen.get_width())
+
+		speedtime = pygame.time.get_ticks()/1000
+		screen.blit(font2.render(str(speedtime), False, WHITE), (10, 100))
+
 		if presicion and not(weaponm or menu or petm):
 			cursor_img_rect.centerx += random.randint(-30, 30)
 			cursor_img_rect.centery += random.randint(-30, 30)
