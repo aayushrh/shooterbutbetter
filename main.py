@@ -43,6 +43,24 @@ with open(".store.txt", 'r') as f:
 	SAVE_DATA = eval(f.read())
 	highscore = SAVE_DATA["highscore"]
 
+class Bar(pygame.sprite.Sprite):
+   def __init__(self, cap, col1, col2, w, h, x, y, bar = "width"):
+      super().__init__()
+      self.cap = cap
+      self.image = pygame.Surface((w, h))
+      self.image.fill(col1)
+      self.rect = pygame.Rect((x, y), self.image.get_size())
+      self.bar = bar
+      self.col2 = col2
+
+   def update(self, tie):
+      smallimage = pygame.transform.scale(self.image, (self.rect.width * tie/self.cap, self.rect.height))
+      smallimage.fill(self.col2)
+      self.image.blit(smallimage, (0, 0))
+
+def clearBar(bar, col1):
+	bar.image.fill(col1)
+
 class Explosion(pygame.sprite.Sprite):
 	def __init__(self, x, y, x_speed, y_speed, image):
 		super().__init__()
@@ -285,7 +303,7 @@ class Player:
 		self.health = 5
 		self.healthcounter = 0
 		self.dead = False
-		self.bullet_speed = 7
+		self.bullet_speed = 25
 		self.weapon = 0
 		self.weapon2type = "none"
 		self.primed = False
@@ -375,11 +393,11 @@ class Player:
 							self.rect.centery - e.rect.centery) ** 2) ** 0.5 <= (self.soulcrystals * self.persoulcrystal)//2:
 						enemy_group.remove(e)
 						if e.type == idkanymore.enemy_type_regular:
-							self.exp += 1 * max(1, level//2)
+							self.exp += 1 * level
 						elif e.type == idkanymore.enemy_type_spiral:
-							self.exp += 2 * max(1, level//2)
+							self.exp += 2 * level
 						elif e.type == idkanymore.enemy_type_rocket:
-							self.exp += 3 * max(1, level//2)
+							self.exp += 3 * level
 				self.soulexpanimcount = 0
 				self.rectexp.centerx = self.rect.centerx
 				self.rectexp.centery = self.rect.centery
@@ -555,7 +573,6 @@ def main():
 	weaponm = petm = False
 	score = 0
 	spawn_rate = 150
-	lvl_time = 500
 	for t in enemy_group:
 		enemy_group.remove(t)
 
@@ -566,6 +583,8 @@ def main():
 		enemy_bullet_group.remove(s)
 	r = 0
 	r_count = 30
+	civilbar = Bar(2, WHITE, (0, 0, 255), 500, 10, width/2 - 250, 85, "width")
+	staminabar = Bar(100, WHITE, (0, 0, 255), 100, 10, 10, 50, "width")
 	while True:
 		if play:
 			level_counter += 1
@@ -587,6 +606,7 @@ def main():
 						play = False
 						menu = True
 			screen.fill(BLACK)
+			playerbar = Bar(player.expneeded, WHITE, (0, 0, 255), SIZE, 5, player.rect.centerx - SIZE / 2, player.rect.centery + SIZE / 2 + 3, "width")
 
 			if len(enemy_bullet_group) >= 50:#max(25, 50 - level * 5):
 				for e in range(len(enemy_bullet_group) - 50):
@@ -608,11 +628,11 @@ def main():
 						if e.hp <= 0:
 							enemy_group.remove(e)
 							if e.type == idkanymore.enemy_type_regular:
-								player.exp += 1 * max(1, level // 2)
+								player.exp += 1 * level
 							elif e.type == idkanymore.enemy_type_spiral:
-								player.exp += 2 * max(1, level // 2)
+								player.exp += 2 * level
 							elif e.type == idkanymore.enemy_type_rocket:
-								player.exp += 3 * max(1, level // 2)
+								player.exp += 3 * level
 						catc = 300
 			if dog:
 				screen.blit(pygame.image.load("images/dog.png"), (
@@ -622,7 +642,7 @@ def main():
 				screen.blit(pygame.image.load("images/cat.png"), (
 					pygame.Rect(player.rect.centerx - 15 + math.sin(r) * 80,
 								player.rect.centery - 15 + math.cos(r) * 80, 60, 60, )))
-			if level_counter >= lvl_time and civil_saved >= civil_needed:
+			if civil_saved >= civil_needed:
 				chance_normal -= 6
 				chance_shotgun += 3
 				chance_shotgun += 2
@@ -633,16 +653,23 @@ def main():
 					hp += 1
 				if not spawn_rate - 10 <= 0:
 					spawn_rate -= 10
-				lvl_time += 50
 				score += 3
 				civil_saved -= civil_needed
 				if level % 2 == 0:
 					civil_needed += 1
+				civilbar = Bar(civil_needed, WHITE, (0, 0, 255), 500, 10, width / 2 - 250, 85, "height")
 
 			if (random.randint(1, spawn_rate) == 1):
 				spawn(player)
-
+			civilbar.update(civil_saved)
 			player.update(left_click, right_click, true_screen, level)
+			if player.dashcool/player.dashcooltime >= -1:
+				num = abs(player.dashcool/player.dashcooltime) * 100
+			else:
+				num = 100
+			clearBar(staminabar, WHITE)
+			staminabar.update(round(num))
+			playerbar.update(player.exp)
 			bullet_group.update()
 			civil_group.update()
 			enemy_bullet_group.draw(screen)
@@ -666,13 +693,16 @@ def main():
 								player.souls = 0
 								player.soulcrystals += 1
 						if c.type == idkanymore.enemy_type_regular:
-							player.exp += 1 * max(1, level//2)
+							player.exp += 1 * level
 						elif c.type == idkanymore.enemy_type_spiral:
-							player.exp += 2 * max(1, level//2)
+							player.exp += 2 * level
 						elif c.type == idkanymore.enemy_type_rocket:
-							player.exp += 3 * max(1, level//2)
+							player.exp += 3 * level
 					else:
 						c.alive = True
+			screen.blit(civilbar.image, civilbar.rect)
+			screen.blit(staminabar.image, staminabar.rect)
+			screen.blit(playerbar.image, playerbar.rect)
 			screen.blit(player.image, player.rect)
 			bullet_group.draw(screen)
 			civil_group.draw(screen)
@@ -721,15 +751,6 @@ def main():
 
 			screen.blit(score_txt, scorepos)
 			screen.blit(lvl_txt, lvlpos)
-			screen.blit(font2.render(str(min(100, round((level_counter / lvl_time) * 100))) + '%', 1, WHITE), (10, 50))
-			screen.blit(font2.render(str(civil_saved) + '/' + str(civil_needed), 1, WHITE), (10, 100))
-
-			if player.dashcool/player.dashcooltime >= -1:
-				num = abs(player.dashcool/player.dashcooltime) * 100
-			else:
-				num = 100
-
-			screen.blit(font2.render(str(round(num)) + '%', 1, WHITE), (10, 150))
 
 		elif menu:
 			screen.fill(BLACK)
