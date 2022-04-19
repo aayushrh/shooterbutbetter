@@ -20,6 +20,8 @@ chance_rocket = 0
 
 hp = 1
 
+prevspeedtime = 0
+
 score = 0
 
 civil_group = pygame.sprite.Group()
@@ -27,6 +29,7 @@ civil_group = pygame.sprite.Group()
 dog = False
 cat = False
 
+speedtime = 0
 
 civil_saved = 0
 civil_needed = 3
@@ -35,11 +38,82 @@ shotgun = False
 boomerang = False
 presicion = False
 
+PLAYER = None
+
 SIZE = 32
 SAVE_DATA = None
 with open(".store.txt", 'r') as f:
 	SAVE_DATA = eval(f.read())
 	highscore = SAVE_DATA["highscore"]
+
+class Bar(pygame.sprite.Sprite):
+   def __init__(self, cap, col1, col2, w, h, x, y, bar = "width"):
+      super().__init__()
+      self.cap = cap
+      self.image = pygame.Surface((w, h))
+      self.image.fill(col1)
+      self.rect = pygame.Rect((x, y), self.image.get_size())
+      self.bar = bar
+      self.col2 = col2
+
+   def update(self, tie):
+      smallimage = pygame.transform.scale(self.image, (self.rect.width * tie/self.cap, self.rect.height))
+      smallimage.fill(self.col2)
+      self.image.blit(smallimage, (0, 0))
+
+def clearBar(bar, col1):
+	bar.image.fill(col1)
+
+class Explosion(pygame.sprite.Sprite):
+	def __init__(self, x, y, x_speed, y_speed, image):
+		super().__init__()
+		self.image = image
+		self.rect = pygame.Rect((x,y), self.image.get_size())
+		self.size = 20
+		self.x_speed = x_speed
+		self.y_speed = y_speed
+		self.type = "ex"
+
+	def update(self):
+		self.rect.centerx += self.x_speed
+		self.rect.centery += self.y_speed
+
+	def blowup(self):
+		global score
+
+		screen.blit(pygame.transform.scale(pygame.image.load("images\soulexp.png"), (242, 242)),(self.rect.centerx - 171, self.rect.centery - 171))
+		for e in enemy_group:
+			if math.sqrt((e.rect.centery - self.rect.centery)**2 + (e.rect.centerx - self.rect.centerx)**2) <= 171:
+				enemy_group.remove(e)
+				if e.type == idkanymore.enemy_type_regular:
+					PLAYER.exp += 1
+				elif e.type == idkanymore.enemy_type_spiral:
+					PLAYER.exp += 2
+				elif e.type == idkanymore.enemy_type_rocket:
+					PLAYER.exp += 3
+
+		for c in civil_group:
+			if math.sqrt((c.rect.centery - self.rect.centery)**2 + (c.rect.centerx - self.rect.centerx)**2) <= 171:
+				civil_group.remove(c)
+				score -= 2
+
+		self.kill()
+
+
+class Wall(pygame.sprite.Sprite):
+	def __init__(self, x, y, x_speed, y_speed, image):
+		super().__init__()
+		self.image = image
+		self.rect = pygame.Rect((x,y), self.image.get_size())
+		self.size = 20
+		self.x_speed = x_speed
+		self.y_speed = y_speed
+		self.type = "wa"
+
+	def update(self):
+		self.rect.centerx += self.x_speed
+		self.rect.centery += self.y_speed
+
 
 class Boomerang(pygame.sprite.Sprite):
 	def __init__(self, x, y, x_speed, y_speed, player):
@@ -136,15 +210,17 @@ class Civilians(pygame.sprite.Sprite):
 			hit = pygame.sprite.spritecollide(self, bullet_group, True)
 			for e in hit:
 				if(type(e) == type(Bullet)):
-					score -= 5
+					score -= 3
 					e.kill()
 					self.kill()
+				elif (type(e) == type(Explosion)):
+					score -= 3
+					e.blowup()
+					self.kill()
 				else:
-					score -= 5
+					score -= 3
 					self.kill()
 				break
-
-
 		else:
 			self.cooldown -= 1
 
@@ -173,6 +249,13 @@ def shootboom(player):
 	new_boom = Boomerang(player.rect.centerx, player.rect.centery, player.dir * math.cos(player.rotation) * 20, player.dir_y * math.sin(player.rotation) * 20, player)
 	bullet_group.add(new_boom)
 
+def shoot_wall(player, image):
+	new_wall = Wall(player.rect.centerx, player.rect.centery, player.dir * math.cos(player.rotation) * 10, player.dir_y * math.sin(player.rotation) * 10, image)
+	bullet_group.add(new_wall)
+
+def shoot_explosion(player):
+	new_explosion = Explosion(player.rect.centerx, player.rect.centery, player.dir * math.cos(player.rotation) * 10, player.dir_y * math.sin(player.rotation) * 10, pygame.image.load("images\player_bullet.png"))
+	bullet_group.add(new_explosion)
 
 def shoot(shooter_coordinates, dir, dir_y, rotation, player, speed):
 	if player:
@@ -213,7 +296,7 @@ class Player:
 		self.image = pygame.transform.scale(pygame.image.load("images/character.png"), (SIZE, SIZE))
 		self.rect = pygame.Rect(width / 2, height / 2, SIZE, SIZE)
 		self.size = 10
-		self.speed = 1
+		self.speed = 4
 		self.rotation = 0
 		self.dir = 1
 		self.dir_y = 1
@@ -223,8 +306,9 @@ class Player:
 		self.health = 5
 		self.healthcounter = 0
 		self.dead = False
-		self.bullet_speed = 10
+		self.bullet_speed = 25
 		self.weapon = 0
+		self.weapon2type = "none"
 		self.primed = False
 		self.primed_cooldown = 0
 		self.gamemode = gamemode
@@ -233,23 +317,34 @@ class Player:
 		self.dashspeed = 5
 		self.dashcooltime = 250
 		self.invinc = False
-		self.bullets = 50
+		self.bullets = 4
 		self.souls = 0
 		self.soulspersoulcrystal = 3
 		self.soulcrystals = 0
-		self.soulrange = 256
-		self.soulexpanimcount = 0
+		self.persoulcrystal = 171
+		self.soulexpanimcount = 512
+		self.rectexp = pygame.Rect(width / 2, height / 2, SIZE, SIZE)
+		self.aimbot = False
+		self.exp = 0
+		self.expneeded = 1
 
-	def update(self, left_clicked, right_clicked, true_screen):
+	def update(self, left_clicked, right_clicked, true_screen, level):
 		global score
-		self.soulcrystals += 1
-		if self.soulexpanimcount > 0:
-			self.soulexpanimcount -= 32
-			image = pygame.transform.scale(pygame.image.load("images/soulexp.png"), (self.soulrange * 2 * (self.soulexpanimcount / 512), self.soulrange * 2 * (self.soulexpanimcount / 512)))
+		if self.exp >= self.expneeded:
+			self.exp = 0
+			score += 1
+			self.expneeded += 1
+		if self.soulexpanimcount < self.soulcrystals * self.persoulcrystal - 1:
+			self.soulexpanimcount += abs(1/10 * (self.soulexpanimcount - (self.soulcrystals * self.persoulcrystal + 50)))
+			image = pygame.transform.scale(pygame.image.load("images/soulexp.png"), (
+			(self.soulcrystals * self.persoulcrystal) * (self.soulexpanimcount / (self.soulcrystals * self.persoulcrystal)), (self.soulcrystals * self.persoulcrystal) * (self.soulexpanimcount / (self.soulcrystals * self.persoulcrystal))))
 			imagerect = image.get_rect()
-			imagerect.centerx = self.rect.centerx
-			imagerect.centery = self.rect.centery
+			imagerect.centerx = self.rectexp.centerx
+			imagerect.centery = self.rectexp.centery
 			screen.blit(image, imagerect)
+			if self.soulexpanimcount > self.soulcrystals * self.persoulcrystal - 1:
+				self.soulcrystals = 0
+				self.soulexpanimcount = 512
 		self.dashcool -= 1
 		if self.dashcool == 0:
 			self.speed /= self.dashspeed
@@ -291,51 +386,62 @@ class Player:
 				self.rect.x -= self.speed
 			elif key[pygame.K_d] and self.rect.right < width:
 				self.rect.x += self.speed
-			if (key[pygame.K_LSHIFT] or key[pygame.K_SPACE]) and self.dashcool <= -self.dashcooltime:
+			if key[pygame.K_SPACE] and self.dashcool <= -self.dashcooltime:
 				self.speed *= self.dashspeed
 				self.dashcool = self.dashlen
 				self.invinc = True
-			if key[pygame.K_q] and self.soulcrystals >= 3:
-				self.soulcrystals = 0
+			if key[pygame.K_q] and self.soulcrystals > 0:
 				for e in enemy_group:
-					if ((self.rect.centerx - e.rect.centerx)**2 + (self.rect.centery - e.rect.centery)**2)**0.5 <= self.soulrange:
+					if ((self.rect.centerx - e.rect.centerx) ** 2 + (
+							self.rect.centery - e.rect.centery) ** 2) ** 0.5 <= (self.soulcrystals * self.persoulcrystal)//2:
 						enemy_group.remove(e)
-						score += 1
-				self.soulexpanimcount = 512
+						if e.type == idkanymore.enemy_type_regular:
+							self.exp += 1 * level
+						elif e.type == idkanymore.enemy_type_spiral:
+							self.exp += 2 * level
+						elif e.type == idkanymore.enemy_type_rocket:
+							self.exp += 3 * level
+				self.soulexpanimcount = 0
+				self.rectexp.centerx = self.rect.centerx
+				self.rectexp.centery = self.rect.centery
+			#if key[pygame.K_r]:
+				#self.aimbot = not self.aimbot
 		if self.weapon == 0:
+			if self.aimbot and self.cooldown_counter == 0 and len(enemy_group) > 0:
+				for e in enemy_group:
+					if self.rect.centerx <= e.rect.centerx and self.rect.centery < e.rect.centery:
+						dir = 1
+						dir_y = 1
+					elif self.rect.centerx <= e.rect.centerx and self.rect.centery >= e.rect.centery:
+						dir_y = -1
+						dir = 1
+					elif self.rect.centerx > e.rect.centerx and self.rect.centery >= e.rect.centery:
+						dir_y = -1
+						dir = -1
+					elif self.rect.centerx > e.rect.centerx and self.rect.centery < e.rect.centery:
+						dir = -1
+						dir_y = 1
+					if (abs(self.rect.centerx - e.rect.centerx) != 0):
+						angle = math.atan(abs(self.rect.centery - e.rect.centery)/abs(self.rect.centerx - e.rect.centerx))
+					else:
+						angle = 0
+					shoot((self.rect.centerx, self.rect.centery), dir, dir_y, angle, True,
+						  self.bullet_speed)
+				self.cooldown_counter = self.cooldown
 			if left_clicked and self.cooldown_counter == 0:
 				shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
 					  self.bullet_speed)
 				self.cooldown_counter = self.cooldown
 			if right_clicked and self.scooldown_counter == 0:
-				if boomerang:
+				if self.weapon2type == "boomerang":
 					if (noboom(bullet_group)):
 						shootboom(self)
-				elif shotgun:
-				# if math.floor(self.bullets) == 3:
-						#shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation, True,
-							  #self.bullet_speed)
-						#shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation - 0.25, True,
-							  #self.bullet_speed)
-						#shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + 0.25, True,
-							  #self.bullet_speed)
-					for e in range(math.floor(self.bullets/2) * 5):
-						shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation + e/(self.bullets * 10), True, self.bullet_speed)
-						shoot((self.rect.centerx, self.rect.centery), self.dir, self.dir_y, self.rotation - e/(self.bullets * 10), True,self.bullet_speed)
+				elif self.weapon2type == "wall":
+					shoot_wall(self, pygame.transform.scale(pygame.transform.rotate(pygame.image.load("images/wallmaker.png"),(90 + math.atan2(self.rect.centerx - cursor_img_rect.centerx, self.rect.centery - cursor_img_rect.centery) * (180 / math.pi))), (SIZE* 2, SIZE*2)))
 					self.scooldown_counter = 40
-				elif presicion:
-					for e in enemy_group:
-						if math.sqrt((e.rect.centerx - mouse_pos[0]) ** 2 + (e.rect.centery - mouse_pos[1]) ** 2) <= SIZE:
-							enemy_group.remove(e)
-							score += 1
-					for e in civil_group:
-						if math.sqrt((e.rect.centerx - mouse_pos[0]) ** 2 + (e.rect.centery - mouse_pos[1]) ** 2) <= SIZE:
-							civil_group.remove(e)
-							score -= 5
-					if self.cooldown * 10 >= 100:
-						self.scooldown_counter = self.cooldown*10
-					else:
-						self.scooldown_counter = 100
+				elif self.weapon2type == "explosion":
+					shoot_explosion(self)
+					self.scooldown_counter = 150
 
 			if self.cooldown_counter > 0:
 				self.cooldown_counter -= 1
@@ -367,6 +473,11 @@ screen = pygame.Surface((width, height))
 pygame.mouse.set_visible(False)
 cursor_img_rect = pygame.image.load("images/cross0.png").get_rect()
 
+def getSpriteByPosition(position,group):
+    for e,spr in range(len(group)):
+        if (e == position):
+            return spr
+
 def main():
 	global score
 	global chance_normal
@@ -379,10 +490,10 @@ def main():
 	global highscore
 	global civil_saved
 	global civil_needed
-	global boomerang
-	global shotgun
-	global presicion
 	global SAVE_DATA
+	global PLAYER
+	global speedtime
+	global prevspeedtime
 
 	dogb = False
 	catb = False
@@ -429,17 +540,18 @@ def main():
 
 	font2 = pygame.font.Font("fonts/fourside.ttf", 35)
 	click1 = font2.render(("-- High : " + str(highscore) + " --"), 1, WHITE)
-	click2 = font2.render(("-- Last : " + str(SAVE_DATA["lastscore"]) + " --"), 1, WHITE)
+	clickpos1 = click1.get_rect()
+	clickpos1.centerx = width / 2
+	clickpos1.centery = height / 2 + height / 4
 
 	while not break_var:
 		screen.fill(BLACK)
 		cursor_img_rect.center = pygame.mouse.get_pos()
 		cursor_img_rect.centerx /= (true_screen.get_width()/screen.get_width())
 		cursor_img_rect.centery /= (true_screen.get_width()/screen.get_width())
-		screen.blit(pygame.transform.rotate(pygame.image.load(f"images/cross0.png"), 25), cursor_img_rect)
+		screen.blit(pygame.transform.rotate(pygame.image.load("images/cross0.png"), 25), cursor_img_rect)
 		screen.blit(title, titlepos)
-		screen.blit(click1, (width / 2 - click1.get_width() / 2, height / 2 + height / 4))
-		screen.blit(click2, (width / 2 - click1.get_width() / 2, height / 2 + height / 3))
+		screen.blit(click1, clickpos1)
 
 		if i > 10:
 			if i > 20:
@@ -456,6 +568,7 @@ def main():
 		true_screen.blit(pygame.transform.scale(screen, true_screen.get_rect().size), (0, 0))
 
 	player = Player(0)
+	PLAYER = player
 	left_click = False
 	right_click = False
 	clock = pygame.time.Clock()
@@ -464,8 +577,7 @@ def main():
 	play = True
 	weaponm = petm = False
 	score = 0
-	spawn_rate = 150
-	lvl_time = 500
+	spawn_rate = 100 * 5
 	for t in enemy_group:
 		enemy_group.remove(t)
 
@@ -476,6 +588,8 @@ def main():
 		enemy_bullet_group.remove(s)
 	r = 0
 	r_count = 30
+	civilbar = Bar(2, WHITE, (0, 0, 255), 500, 10, width/2 - 250, 85, "width")
+	staminabar = Bar(100, WHITE, (0, 0, 255), 100, 10, 10, 50, "width")
 	while True:
 		if play:
 			level_counter += 1
@@ -497,6 +611,12 @@ def main():
 						play = False
 						menu = True
 			screen.fill(BLACK)
+			playerbar = Bar(player.expneeded, WHITE, (0, 0, 255), SIZE, 5, player.rect.centerx - SIZE / 2, player.rect.centery + SIZE / 2 + 3, "width")
+
+			if len(enemy_bullet_group) >= 25:#max(25, 50 - level * 5):
+				for e in range(len(enemy_bullet_group) - 25):
+					enemy_bullet_group.sprites()[len(enemy_bullet_group) - e - 1].kill()
+
 			if (r_count == 0):
 				r = (r + 0.05) % 360
 			else:
@@ -512,7 +632,12 @@ def main():
 						fir = True
 						if e.hp <= 0:
 							enemy_group.remove(e)
-							score += 1
+							if e.type == idkanymore.enemy_type_regular:
+								player.exp += 1 * level
+							elif e.type == idkanymore.enemy_type_spiral:
+								player.exp += 2 * level
+							elif e.type == idkanymore.enemy_type_rocket:
+								player.exp += 3 * level
 						catc = 300
 			if dog:
 				screen.blit(pygame.image.load("images/dog.png"), (
@@ -522,7 +647,7 @@ def main():
 				screen.blit(pygame.image.load("images/cat.png"), (
 					pygame.Rect(player.rect.centerx - 15 + math.sin(r) * 80,
 								player.rect.centery - 15 + math.cos(r) * 80, 60, 60, )))
-			if level_counter >= lvl_time and civil_saved >= civil_needed:
+			if civil_saved >= civil_needed:
 				chance_normal -= 6
 				chance_shotgun += 3
 				chance_shotgun += 2
@@ -533,18 +658,27 @@ def main():
 					hp += 1
 				if not spawn_rate - 10 <= 0:
 					spawn_rate -= 10
-				lvl_time += 100
 				score += 3
 				civil_saved -= civil_needed
 				if level % 2 == 0:
 					civil_needed += 1
+				civilbar = Bar(civil_needed, WHITE, (0, 0, 255), 500, 10, width / 2 - 250, 85, "height")
 
 			if (random.randint(1, spawn_rate) == 1):
-				spawn(player)
-
-			player.update(left_click, right_click, true_screen)
+				for i in range(5):
+					spawn(player)
+			civilbar.update(civil_saved)
+			player.update(left_click, right_click, true_screen, level)
+			if player.dashcool/player.dashcooltime >= -1:
+				num = abs(player.dashcool/player.dashcooltime) * 100
+			else:
+				num = 100
+			clearBar(staminabar, WHITE)
+			staminabar.update(round(num))
+			playerbar.update(player.exp)
 			bullet_group.update()
 			civil_group.update()
+			enemy_bullet_group.draw(screen)
 			enemy_bullet_group.update(player)
 			enemy_group.update(enemy_bullet_group, player, screen, bullet_group)
 
@@ -559,16 +693,23 @@ def main():
 					c.hp -= 1
 					if c.hp == 0:
 						enemy_group.remove(c)
-						player.souls += 1
-						print(player.souls, player.soulcrystals)
-						if player.souls >= player.soulspersoulcrystal:
-							player.souls = 0
-							player.soulcrystals += 1
-						score += 1
+						if player.soulcrystals < 3:
+							player.souls += 1
+							if player.souls >= player.soulspersoulcrystal:
+								player.souls = 0
+								player.soulcrystals += 1
+						if c.type == idkanymore.enemy_type_regular:
+							player.exp += 1 * level
+						elif c.type == idkanymore.enemy_type_spiral:
+							player.exp += 2 * level
+						elif c.type == idkanymore.enemy_type_rocket:
+							player.exp += 3 * level
 					else:
 						c.alive = True
+			screen.blit(civilbar.image, civilbar.rect)
+			screen.blit(staminabar.image, staminabar.rect)
+			screen.blit(playerbar.image, playerbar.rect)
 			screen.blit(player.image, player.rect)
-			enemy_bullet_group.draw(screen)
 			bullet_group.draw(screen)
 			civil_group.draw(screen)
 
@@ -589,12 +730,13 @@ def main():
 						c.speed *= 2
 						fir = False
 			if player.dead:
+				prevspeedtime += speedtime
+				print(speedtime)
 				if level > highscore:
 					highscore = level
 				with open(".store.txt", 'w') as f:
 					data = {
-						"highscore": highscore,
-						"lastscore": level
+						"highscore": highscore
 					}
 					f.write(str(data))
 				with open(".store.txt", 'r') as f:
@@ -617,15 +759,9 @@ def main():
 
 			screen.blit(score_txt, scorepos)
 			screen.blit(lvl_txt, lvlpos)
-			screen.blit(font2.render(str(min(100, round((level_counter / lvl_time) * 100))) + '%', 1, WHITE), (10, 50))
-			screen.blit(font2.render(str(civil_saved) + '/' + str(civil_needed), 1, WHITE), (10, 100))
 
-			if player.dashcool/player.dashcooltime >= -1:
-				num = abs(player.dashcool/player.dashcooltime) * 100
-			else:
-				num = 100
-
-			screen.blit(font2.render(str(round(num)) + '%', 1, WHITE), (10, 150))
+			speedtime = pygame.time.get_ticks() / 1000 - prevspeedtime
+			screen.blit(font2.render(str(round(speedtime * 100)/100), False, WHITE), (10, 80))
 
 		elif menu:
 			screen.fill(BLACK)
@@ -649,15 +785,15 @@ def main():
 							if 464 < mouse_pos[1] < 519:
 								if score >= 5:
 									score -= 5
-									player.speed += 4
+									player.speed += 2
 							elif 355 < mouse_pos[1] < 412:
-								if score >= 1 and player.cooldown > 1:
-									score -= 1
+								if score >= 2 and player.cooldown > 5:
+									score -= 2
 									player.cooldown -= 1
 									player.bullets += 0.5
 							elif 246 < mouse_pos[1] < 301:
-								if score >= 2:
-									score -= 2
+								if score >= 4:
+									score -= 4
 									player.health += 1
 				if event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_RIGHT:
@@ -739,21 +875,17 @@ def main():
 						mouse_pos = pygame.mouse.get_pos()
 						mouse_pos = (mouse_pos[0] / (true_screen.get_rect().size[0] / width),
 									 mouse_pos[1] / (true_screen.get_rect().size[1] / height))
-						print(mouse_pos)
 						if (781 < mouse_pos[0] and mouse_pos[0] < 999 and 247 < mouse_pos[1] and mouse_pos[1] < 301):
 							if score >= 10:
-								presicion = True
-								shotgun = boomerang = False
+								player.weapon2type = "explosion"
 								score -= 10
 						if (781 < mouse_pos[0] and mouse_pos[0] < 999 and 357 < mouse_pos[1] and mouse_pos[1] < 411):
 							if score >= 10:
-								boomerang = True
-								shotgun = presicion = False
+								player.weapon2type = "boomerang"
 								score -= 10
 						if (781 < mouse_pos[0] and mouse_pos[0] < 999 and 475 < mouse_pos[1] and mouse_pos[1] < 527):
 							if score >= 10:
-								shotgun = True
-								boomerang = presicion = False
+								player.weapon2type = "wall"
 								score -= 10
 				elif event.type == pygame.KEYDOWN:
 					if event.key == pygame.K_LEFT:
@@ -770,6 +902,7 @@ def main():
 			cursor_img_rect.centery = pygame.mouse.get_pos()[1]
 		cursor_img_rect.centerx /= (true_screen.get_width()/screen.get_width())
 		cursor_img_rect.centery /= (true_screen.get_width()/screen.get_width())
+
 		if presicion and not(weaponm or menu or petm):
 			cursor_img_rect.centerx += random.randint(-30, 30)
 			cursor_img_rect.centery += random.randint(-30, 30)
@@ -780,4 +913,3 @@ def main():
 
 
 main()
-
