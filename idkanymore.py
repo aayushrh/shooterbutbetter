@@ -66,7 +66,7 @@ class Enemy_Attack(pygame.sprite.Sprite):
 class Enemy_Bullet_Type(pygame.sprite.Sprite):
    def __init__(self, speed, width, height, accel, homing, delay, spread):
        pygame.sprite.Sprite.__init__(self)
-       self.speed = speed
+       self.speed = speed * 3
        self.width = width
        self.height = height
        self.accel = accel
@@ -76,20 +76,20 @@ class Enemy_Bullet_Type(pygame.sprite.Sprite):
 
 bullet_type = Bullet_Type(15, 5, 5)
 ship_type = Ship_Type(5, WIN_W/25, WIN_H/24, 5, bullet_type)
-enemy_bullet_regular = Enemy_Bullet_Type(10, 5, 5, False, 0, 0, 0)
-enemy_attack_regular = Enemy_Attack(enemy_bullet_regular, 3, 5, 15, 0, 0, True, "regular", 1)
+enemy_bullet_regular = Enemy_Bullet_Type(2, 5, 5, False, 2000, 0, 0)
+enemy_attack_regular = Enemy_Attack(enemy_bullet_regular, 1, 5, 30, 0, 0, True, "regular", 1)
 enemy_type_regular = Enemy_Type(0.1, WIN_W/25, WIN_H/24, enemy_attack_regular, "snipe" + str(WIN_H//4) + ";100_")
 
-enemy_bullet_slow = Enemy_Bullet_Type(5, 5, 5, False, 0, 0, 0)
+enemy_bullet_slow = Enemy_Bullet_Type(1, 5, 5, False, 0, 0, 0)
 enemy_attack_shotgun = Enemy_Attack(enemy_bullet_slow, 8, 10, 15, 30, 30, True, "shotgun2_", 1)
 enemy_type_shotgun = Enemy_Type(0.25, WIN_W/25, WIN_H/24, enemy_attack_shotgun, "diveplayer200_")
 
-enemy_attack_spiral = Enemy_Attack(enemy_bullet_regular, 30, 60, 20, 24, 0, False, "spiral", 1)
-enemy_type_spiral = Enemy_Type(0.3, WIN_W/25, WIN_H/24, enemy_attack_spiral, "bomb" + str(WIN_H//4) + ";100_")
+enemy_attack_spiral = Enemy_Attack(enemy_bullet_regular, 30, 60, 20, 100, 0, False, "spiral", 1)
+enemy_type_spiral = Enemy_Type(0.15, WIN_W/25, WIN_H/24, enemy_attack_spiral, "bomb" + str(WIN_H//4) + ";100_")
 
-enemy_bullet_rocket = Enemy_Bullet_Type(0.3, 5, 5, "8;5_", 1, "150;60_", 5)
-enemy_attack_rocket = Enemy_Attack(enemy_bullet_rocket, 15, 60, 30, 90, 30, True, "sides2_", 2)
-enemy_type_rocket = Enemy_Type(0.1, WIN_W/25, WIN_H/24, enemy_attack_rocket, "snipe" + str(WIN_H//4) + ";100_")
+enemy_bullet_rocket = Enemy_Bullet_Type(0.15, 5, 5, "8;5_", 1, "150;60_", 5)
+enemy_attack_rocket = Enemy_Attack(enemy_bullet_rocket, 2, 60, 60, 90, 30, True, "sides2_", 2)
+enemy_type_rocket = Enemy_Type(0.05, WIN_W/25, WIN_H/24, enemy_attack_rocket, "snipe" + str(WIN_H//4) + ";100_")
 
 os.environ['SDL_VIDEO_CENTERED'] = '1'  # Force static position of screen
 
@@ -237,10 +237,14 @@ class Enemy(pygame.sprite.Sprite):
            self.image = pygame.transform.scale(pygame.image.load('images/enemy.png'), (SIZE, SIZE))
            for b in bullet_group:
                if math.sqrt((b.rect.x - self.rect.x) ** 2 + (b.rect.y - self.rect.y) ** 2) <= 40:
-                   if b.type == "bu":
-                       b.kill()
-                   else:
+                   if b.type == "bm":
                        b.hit = True
+                   elif b.type == "ex":
+                       b.blowup()
+                   elif b.type == "wa":
+                       pass
+                   else:
+                       b.kill()
                    self.alive = False
            if self.fireclock == 0:
                if self.volley == 0:
@@ -391,7 +395,7 @@ class Enemy_Bullet(pygame.sprite.Sprite):
    def __init__(self, spawner, enemy_bullet_type, direction):
        pygame.sprite.Sprite.__init__(self)
        self.type = enemy_bullet_type
-       self.image = pygame.image.load('images/enemy_bullet.png')
+       self.image = pygame.transform.scale(pygame.image.load('images/enemy_bullet.png'), (25, 25))
        self.rect = self.image.get_rect()
        self.rect.centerx = spawner.rect.centerx
        self.rect.centery = spawner.rect.centery
