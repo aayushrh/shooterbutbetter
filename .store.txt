@@ -1,1 +1,1 @@
-{'highscore': 2}
+{'lastscore': 0, 'highscore': 0}
